@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "check": "npm run typecheck && npm run test && npm run build",
+    "verify": "npm run check && npm run test:e2e",
     "assets:generate": "node scripts/generate-assets.mjs",
     "levels:generate": "tsx scripts/generate-levels.ts"
   },

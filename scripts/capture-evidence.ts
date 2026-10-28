@@ -180,6 +180,9 @@ async function mobile(): Promise<void> {
   await page.getByRole('dialog', { name: 'Settings' }).waitFor({ state: 'visible' });
   await page.waitForTimeout(300);
   await page.screenshot({ path: `${OUT}/settings-390.png` });
+  await page.getByRole('button', { name: 'Close' }).focus();
+  await page.waitForTimeout(120);
+  await page.screenshot({ path: `${OUT}/settings-close-focus.png` });
   await context.close();
 }
 
