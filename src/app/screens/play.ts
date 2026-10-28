@@ -36,6 +36,7 @@ import {
 } from '../ui/dom';
 import { createIcon } from '../ui/icons';
 import {
+  createStarBurst,
   openDialog,
   type DialogAction,
   type DialogHandle,
@@ -536,6 +537,9 @@ export function playScreen(context: AppContext, level: Level): Screen {
         : `Best stays at ${best} of 3 stars`,
     );
     visual.append(bestLine);
+    const burst = createStarBurst();
+    burst.classList.add('star-burst--win');
+    visual.append(burst);
 
     const moment = guide.moment;
     if (moment) {

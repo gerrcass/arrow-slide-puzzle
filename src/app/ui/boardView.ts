@@ -251,7 +251,7 @@ export class BoardView {
 
     const frostAnimation = this.frost.animate(
       [{ opacity: 1 }, { opacity: 0 }],
-      { duration: 720, easing: 'ease-out', fill: 'forwards' },
+      { duration: 620, easing: 'ease-out', fill: 'forwards' },
     );
     this.animations.add(frostAnimation);
 
@@ -271,7 +271,7 @@ export class BoardView {
         ],
         {
           duration: 420,
-          delay: 300 + index * 34,
+          delay: 640 + index * 30,
           easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
           fill: 'forwards',
         },
@@ -290,8 +290,8 @@ export class BoardView {
           { opacity: 1 },
         ],
         {
-          duration: 820,
-          delay: 380 + index * 26,
+          duration: 780,
+          delay: 1000 + index * 20,
           easing: 'ease-in-out',
           fill: 'forwards',
         },
