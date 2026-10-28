@@ -1,5 +1,6 @@
 import type { Constellation } from '../../content/schema';
-import { svgEl } from './dom';
+import { svgEl, svgPath } from './dom';
+import { RIBBON_PAINT } from './ribbonPalette';
 
 let constellationCounter = 0;
 
@@ -8,27 +9,84 @@ export interface ConstellationArtOptions {
   readonly className?: string;
 }
 
+function makeRandom(seed: number): () => number {
+  let state = (seed >>> 0) || 0x9e3779b9;
+  return () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 0x100000000;
+  };
+}
+
+function seedFor(value: string): number {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+/**
+ * The constellation is one shared visual language: an accent-tinted silhouette,
+ * an orbit of dust, gold star lines, and soft nodes. The motif is deliberately
+ * low-contrast so the line work stays the hero.
+ */
 export function createConstellationArt(
   constellation: Constellation,
   options: ConstellationArtOptions = {},
 ): SVGSVGElement {
   constellationCounter += 1;
   const uid = `constellation-${constellationCounter}`;
+  const paint = RIBBON_PAINT[constellation.accent];
   const svg = svgEl('svg', {
     viewBox: '0 0 100 100',
     class: options.className ? `constellation ${options.className}` : 'constellation',
     'aria-hidden': 'true',
     focusable: 'false',
   });
+  svg.style.setProperty('--constellation-accent', paint.base);
+  svg.style.setProperty('--constellation-light', paint.light);
 
   const defs = svgEl('defs');
   const haze = svgEl('radialGradient', { id: `${uid}-haze` });
   haze.append(
-    svgEl('stop', { offset: '0%', 'stop-color': '#ffd27a', 'stop-opacity': '0.16' }),
-    svgEl('stop', { offset: '60%', 'stop-color': '#c8a7ff', 'stop-opacity': '0.06' }),
+    svgEl('stop', { offset: '0%', 'stop-color': paint.base, 'stop-opacity': '0.2' }),
+    svgEl('stop', { offset: '58%', 'stop-color': '#c8a7ff', 'stop-opacity': '0.055' }),
     svgEl('stop', { offset: '100%', 'stop-color': '#c8a7ff', 'stop-opacity': '0' }),
   );
-  defs.append(haze);
+
+  const motif = svgEl('linearGradient', {
+    id: `${uid}-motif`,
+    x1: '0',
+    y1: '0',
+    x2: '0.85',
+    y2: '1',
+  });
+  motif.append(
+    svgEl('stop', { offset: '0%', 'stop-color': paint.light }),
+    svgEl('stop', { offset: '46%', 'stop-color': paint.base }),
+    svgEl('stop', { offset: '100%', 'stop-color': paint.dark }),
+  );
+
+  const soft = svgEl('filter', {
+    id: `${uid}-soft`,
+    x: '-20%',
+    y: '-20%',
+    width: '140%',
+    height: '140%',
+  });
+  soft.append(svgEl('feGaussianBlur', { stdDeviation: '2.2' }));
+
+  const starGlow = svgEl('filter', {
+    id: `${uid}-star-glow`,
+    x: '-120%',
+    y: '-120%',
+    width: '340%',
+    height: '340%',
+  });
+  starGlow.append(svgEl('feGaussianBlur', { stdDeviation: '1.4' }));
+
+  defs.append(haze, motif, soft, starGlow);
   svg.append(defs);
 
   svg.append(
@@ -38,9 +96,66 @@ export function createConstellationArt(
       rx: '48',
       ry: '42',
       fill: `url(#${uid}-haze)`,
-      opacity: options.muted ? '0.35' : '1',
+      opacity: options.muted ? '0.3' : '1',
     }),
   );
+
+  const art = svgEl('g', {
+    class: 'constellation-art',
+    opacity: options.muted ? '0.55' : '1',
+  });
+
+  art.append(
+    svgPath(constellation.motif, {
+      class: 'constellation-motif-halo',
+      fill: `url(#${uid}-motif)`,
+      'fill-rule': 'evenodd',
+      filter: `url(#${uid}-soft)`,
+      opacity: '0.55',
+    }),
+    svgPath(constellation.motif, {
+      class: 'constellation-motif',
+      fill: `url(#${uid}-motif)`,
+      'fill-rule': 'evenodd',
+      opacity: '0.82',
+    }),
+  );
+
+  const orbit = svgEl('g', { class: 'constellation-orbit' });
+  orbit.append(
+    svgEl('ellipse', {
+      cx: '50',
+      cy: '50',
+      rx: '46',
+      ry: '27',
+      transform: 'rotate(-18 50 50)',
+    }),
+    svgEl('ellipse', {
+      cx: '50',
+      cy: '50',
+      rx: '33',
+      ry: '44',
+      transform: 'rotate(26 50 50)',
+    }),
+  );
+  art.append(orbit);
+
+  const random = makeRandom(seedFor(constellation.id));
+  const dust = svgEl('g', { class: 'constellation-dust' });
+  for (let index = 0; index < 9; index += 1) {
+    const angle = random() * Math.PI * 2;
+    const distance = 26 + random() * 22;
+    dust.append(
+      svgEl('circle', {
+        cx: (50 + Math.cos(angle) * distance).toFixed(2),
+        cy: (50 + Math.sin(angle) * distance * 0.82).toFixed(2),
+        r: (0.38 + random() * 0.72).toFixed(2),
+        opacity: (0.18 + random() * 0.36).toFixed(2),
+      }),
+    );
+  }
+  art.append(dust);
+  svg.append(art);
 
   const lineGroup = svgEl('g', { class: 'constellation-lines' });
   for (const [fromIndex, toIndex] of constellation.lines) {
@@ -61,19 +176,21 @@ export function createConstellationArt(
   const starGroup = svgEl('g', { class: 'constellation-stars' });
   for (const star of constellation.stars) {
     const radius = (1.1 + star.size * 1.25).toFixed(2);
+    const x = (star.x * 100).toFixed(2);
+    const y = (star.y * 100).toFixed(2);
     starGroup.append(
       svgEl('circle', {
-        cx: (star.x * 100).toFixed(2),
-        cy: (star.y * 100).toFixed(2),
-        r: radius,
-      }),
-    );
-    starGroup.append(
-      svgEl('circle', {
-        cx: (star.x * 100).toFixed(2),
-        cy: (star.y * 100).toFixed(2),
-        r: (Number(radius) * 2.7).toFixed(2),
         class: 'constellation-halo',
+        cx: x,
+        cy: y,
+        r: (Number(radius) * 2.9).toFixed(2),
+      }),
+      svgEl('circle', {
+        class: 'constellation-star',
+        cx: x,
+        cy: y,
+        r: radius,
+        filter: `url(#${uid}-star-glow)`,
       }),
     );
   }

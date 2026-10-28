@@ -35,9 +35,15 @@ describe('campaign shape', () => {
   });
 
   it('has usable original constellation art and copy', () => {
+    const motifs = new Set<string>();
     for (const constellation of CONSTELLATIONS) {
       expect(constellation.name.trim().length).toBeGreaterThan(0);
       expect(constellation.caption.trim().length).toBeGreaterThan(0);
+      expect(constellation.motif.length).toBeGreaterThan(40);
+      expect(constellation.motif).toMatch(/^[MmLlHhVvCcSsQqTtAaZz0-9.,\s+-]+$/);
+      expect(constellation.motif).not.toContain('<');
+      expect(constellation.motif).not.toContain('url(');
+      motifs.add(constellation.motif);
       expect(constellation.stars.length).toBeGreaterThanOrEqual(4);
       for (const star of constellation.stars) {
         expect(star.x).toBeGreaterThanOrEqual(0);
@@ -54,6 +60,7 @@ describe('campaign shape', () => {
         expect(from).not.toBe(to);
       }
     }
+    expect(motifs.size).toBe(12);
   });
 });
 

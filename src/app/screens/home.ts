@@ -16,7 +16,13 @@ export function homeScreen(context: AppContext): Screen {
 
   const navPill = el('span', 'pill pill--gold');
   navPill.append(createIcon('star', 'icon icon--sm'), 'A twilight puzzle');
-  nav.append(brand, navPill);
+  const gallery = el('button', 'btn btn--ghost home-gallery');
+  gallery.type = 'button';
+  gallery.append(createIcon('gallery', 'icon icon--sm'), 'Gallery');
+  gallery.addEventListener('click', () => context.navigate('#/gallery'));
+  const navActions = el('div', 'home-nav__actions');
+  append(navActions, gallery, navPill);
+  nav.append(brand, navActions);
 
   const hero = el('section', 'home-hero');
   const copy = el('div', 'home-copy');

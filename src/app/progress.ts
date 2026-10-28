@@ -278,6 +278,21 @@ export function completedCount(save: SaveData): number {
   return Object.keys(save.levels).length;
 }
 
+/**
+ * A constellation is collected by completing its tangle, independent of the
+ * star result. Gallery unlocks therefore follow completion, never a replay.
+ */
+export function isConstellationCollected(
+  save: SaveData,
+  levelIndex: number,
+  levelCount: number,
+): boolean {
+  if (!Number.isInteger(levelIndex) || levelIndex < 0 || levelIndex >= levelCount) {
+    return false;
+  }
+  return isLevelComplete(save, levelIndex);
+}
+
 export function totalStars(save: SaveData): number {
   let total = 0;
   for (const progress of Object.values(save.levels)) total += progress.bestStars;
@@ -347,6 +362,10 @@ export class ProgressStore {
 
   get completedCount(): number {
     return completedCount(this.save);
+  }
+
+  isConstellationCollected(levelIndex: number): boolean {
+    return isConstellationCollected(this.save, levelIndex, this.levelCount);
   }
 
   continueLevel(): number | null {

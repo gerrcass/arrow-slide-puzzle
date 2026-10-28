@@ -11,6 +11,26 @@
   padding-block: var(--space-2);
 }
 
+.home-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.home-gallery {
+  min-height: 2.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  padding-inline: 0.8rem;
+}
+
+.home-gallery:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
 .brand {
   display: inline-flex;
   align-items: center;

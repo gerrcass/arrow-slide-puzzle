@@ -32,6 +32,17 @@
   padding-block: var(--space-1);
 }
 
+.levels-gallery {
+  min-height: 2.75rem;
+  border-color: rgba(255, 210, 122, 0.22);
+  color: var(--color-gold-soft);
+}
+
+.levels-gallery:hover {
+  border-color: rgba(255, 210, 122, 0.42);
+  background: rgba(255, 210, 122, 0.09);
+}
+
 .levels-body {
   display: flex;
   flex-direction: column;

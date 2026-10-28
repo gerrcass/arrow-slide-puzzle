@@ -91,6 +91,12 @@ export interface Constellation {
   readonly name: string;
   readonly caption: string;
   readonly accent: RibbonColor;
+  /**
+   * Original silhouette in a 0 0 100 100 viewBox. It sits behind the star
+   * lines as a soft, luminous shape. Sub-paths are filled with the even-odd
+   * rule, so a closed shape inside the silhouette reads as a cut-out.
+   */
+  readonly motif: string;
   readonly stars: readonly StarNode[];
   /** Pairs of indices into `stars`. */
   readonly lines: readonly (readonly [number, number])[];

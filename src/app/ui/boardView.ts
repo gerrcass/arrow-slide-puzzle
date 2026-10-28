@@ -1,13 +1,16 @@
+import type { Constellation } from '../../content/schema';
 import { HEADING_VECTORS } from '../../engine/geometry';
 import type { Attempt, Resolution } from '../../engine/session';
-import type { Board, RibbonColor } from '../../engine/types';
+import type { Board, Piece, RibbonColor } from '../../engine/types';
 import { createBoardArt, describePiece } from './boardSvg';
-import { el } from './dom';
+import { el, svgEl } from './dom';
+import { revealDuration, revealHoleFor } from './reveal';
 
 export interface BoardViewOptions {
   readonly seed: number;
   readonly accent?: RibbonColor;
   readonly describedBy?: string;
+  readonly constellation?: Constellation | undefined;
   readonly onActivate: (pieceId: string) => void;
 }
 
@@ -22,6 +25,12 @@ export class BoardView {
 
   private readonly svg: SVGSVGElement;
   private readonly groups: Map<string, SVGGElement>;
+  private readonly frost: SVGGElement | null;
+  private readonly holes: SVGGElement | null;
+  private readonly constellationArt: SVGSVGElement | null;
+  private readonly constellationLines: readonly SVGLineElement[];
+  private readonly constellationStars: readonly SVGCircleElement[];
+  private readonly revealed = new Set<string>();
   private readonly board: Board;
   private readonly onActivate: (pieceId: string) => void;
   private readonly abort = new AbortController();
@@ -29,6 +38,7 @@ export class BoardView {
   private readonly animations = new Set<Animation>();
   private locked = false;
   private destroyed = false;
+  private revealComplete = false;
 
   constructor(board: Board, options: BoardViewOptions) {
     this.board = board;
@@ -38,9 +48,21 @@ export class BoardView {
       interactive: true,
       accent: options.accent ?? 'rose',
       className: 'board-svg--play',
+      constellation: options.constellation,
     });
     this.svg = art.svg;
     this.groups = new Map(art.groups);
+    this.frost = art.frost;
+    this.holes = art.holes;
+    this.constellationArt = art.constellation?.querySelector<SVGSVGElement>(
+      '.constellation--board',
+    ) ?? null;
+    this.constellationLines = [
+      ...art.svg.querySelectorAll<SVGLineElement>('.constellation-lines line'),
+    ];
+    this.constellationStars = [
+      ...art.svg.querySelectorAll<SVGCircleElement>('.constellation-star'),
+    ];
 
     if (options.describedBy) {
       this.svg.setAttribute('aria-describedby', options.describedBy);
@@ -124,6 +146,178 @@ export class BoardView {
     this.schedule(() => group.classList.remove('is-hinted'), 1500);
   }
 
+  /**
+   * Opens a frost hole along the exact cells the ribbon vacated. The reveal is
+   * started with the slide, so it reads as the ribbon peeling the frost back.
+   */
+  async punchReveal(piece: Piece, reduced: boolean): Promise<void> {
+    if (this.destroyed || !this.holes || this.revealed.has(piece.id)) return;
+    this.revealed.add(piece.id);
+
+    const hole = revealHoleFor(piece, reduced);
+    const node = svgEl('path', {
+      class: 'frost-hole',
+      d: hole.d,
+      fill: 'none',
+      stroke: '#000000',
+      'stroke-width': String(hole.strokeWidth),
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+      pathLength: '1',
+      'stroke-dasharray': '1',
+      'stroke-dashoffset': reduced ? '0' : '1',
+      'data-piece-id': piece.id,
+    });
+    this.holes.append(node);
+
+    if (reduced || revealDuration(reduced) === 0) {
+      node.setAttribute('stroke-dashoffset', '0');
+      return;
+    }
+
+    const animation = node.animate(
+      [
+        { strokeDashoffset: 1 },
+        { strokeDashoffset: 0 },
+      ],
+      {
+        duration: hole.durationMs,
+        delay: 140,
+        easing: 'cubic-bezier(0.33, 0.8, 0.4, 1)',
+        fill: 'forwards',
+      },
+    );
+    await this.finished(animation);
+    if (this.destroyed) return;
+    node.setAttribute('stroke-dashoffset', '0');
+  }
+
+  /** Retry/restart returns the frost to its untouched state. */
+  resetReveals(): void {
+    if (this.destroyed) return;
+    this.revealed.clear();
+    this.revealComplete = false;
+    this.holes?.replaceChildren();
+    for (const node of [this.frost, this.holes, this.constellationArt]) {
+      if (!node) continue;
+      for (const animation of node.getAnimations({ subtree: true })) {
+        try {
+          animation.cancel();
+        } catch {
+          // Already finished.
+        }
+      }
+    }
+    if (this.frost) {
+      this.frost.style.display = '';
+      this.frost.style.opacity = '';
+    }
+    this.constellationArt?.classList.remove('is-revealed');
+    for (const line of this.constellationLines) {
+      line.style.removeProperty('stroke-dasharray');
+      line.style.removeProperty('stroke-dashoffset');
+    }
+    for (const star of this.constellationStars) {
+      star.style.removeProperty('opacity');
+    }
+  }
+
+  /**
+   * The win sequence: remaining frost dissolves, the line work draws itself,
+   * then the stars settle in. Reduced motion keeps the completed art and skips
+   * the long sequence.
+   */
+  async revealBoard(reduced: boolean): Promise<void> {
+    if (this.destroyed || this.revealComplete) return;
+    this.revealComplete = true;
+
+    if (!this.frost || !this.constellationArt) {
+      this.frost?.style.setProperty('display', 'none');
+      return;
+    }
+
+    if (reduced) {
+      this.frost.style.display = 'none';
+      this.constellationArt.classList.add('is-revealed');
+      for (const line of this.constellationLines) {
+        line.style.removeProperty('stroke-dasharray');
+        line.style.removeProperty('stroke-dashoffset');
+      }
+      for (const star of this.constellationStars) {
+        star.style.removeProperty('opacity');
+      }
+      return;
+    }
+
+    const frostAnimation = this.frost.animate(
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: 720, easing: 'ease-out', fill: 'forwards' },
+    );
+    this.animations.add(frostAnimation);
+
+    const lineAnimations = this.constellationLines.map((line, index) => {
+      let length = 0;
+      try {
+        length = line.getTotalLength();
+      } catch {
+        length = 10;
+      }
+      line.style.strokeDasharray = String(length);
+      line.style.strokeDashoffset = String(length);
+      const animation = line.animate(
+        [
+          { strokeDashoffset: length },
+          { strokeDashoffset: 0 },
+        ],
+        {
+          duration: 420,
+          delay: 300 + index * 34,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          fill: 'forwards',
+        },
+      );
+      this.animations.add(animation);
+      return animation;
+    });
+
+    const starAnimations = this.constellationStars.map((star, index) => {
+      star.style.opacity = '0';
+      const animation = star.animate(
+        [
+          { opacity: 0 },
+          { opacity: 1, offset: 0.42 },
+          { opacity: 0.62, offset: 0.7 },
+          { opacity: 1 },
+        ],
+        {
+          duration: 820,
+          delay: 380 + index * 26,
+          easing: 'ease-in-out',
+          fill: 'forwards',
+        },
+      );
+      this.animations.add(animation);
+      return animation;
+    });
+
+    await Promise.all(
+      [frostAnimation, ...lineAnimations, ...starAnimations].map((animation) =>
+        this.finished(animation),
+      ),
+    );
+
+    if (this.destroyed) return;
+    this.frost.style.display = 'none';
+    this.constellationArt.classList.add('is-revealed');
+    for (const line of this.constellationLines) {
+      line.style.removeProperty('stroke-dasharray');
+      line.style.removeProperty('stroke-dashoffset');
+    }
+    for (const star of this.constellationStars) {
+      star.style.opacity = '1';
+    }
+  }
+
   focusNextAfter(pieceId: string): void {
     const order = this.board.pieces.map((piece) => piece.id);
     const start = order.indexOf(pieceId);
@@ -171,6 +365,7 @@ export class BoardView {
   ): Promise<void> {
     const group = this.groups.get(resolution.piece.id);
     if (!group) return;
+    const reveal = this.punchReveal(resolution.piece, reduced);
 
     if (reduced) {
       const animation = group.animate(
@@ -180,7 +375,7 @@ export class BoardView {
         ],
         { duration: 120, easing: 'ease-out', fill: 'forwards' },
       );
-      await this.finished(animation);
+      await Promise.all([this.finished(animation), reveal]);
       group.style.display = 'none';
       for (const active of group.getAnimations()) active.cancel();
       return;
@@ -219,6 +414,7 @@ export class BoardView {
       },
     );
     await this.finished(animation);
+    await reveal;
     group.style.display = 'none';
     for (const active of group.getAnimations()) active.cancel();
   }

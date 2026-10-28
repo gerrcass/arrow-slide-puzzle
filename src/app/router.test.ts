@@ -10,9 +10,11 @@ describe('hash routing', () => {
     expect(parseRoute('#', LEVEL_COUNT)).toEqual({ name: 'home' });
   });
 
-  it('parses the level select route', () => {
+  it('parses the level select and gallery routes', () => {
     expect(parseRoute('#/levels', LEVEL_COUNT)).toEqual({ name: 'levels' });
     expect(parseRoute('#/levels/', LEVEL_COUNT)).toEqual({ name: 'levels' });
+    expect(parseRoute('#/gallery', LEVEL_COUNT)).toEqual({ name: 'gallery' });
+    expect(parseRoute('#/gallery/', LEVEL_COUNT)).toEqual({ name: 'gallery' });
   });
 
   it('maps one-based play URLs to zero-based level indexes', () => {
@@ -29,13 +31,14 @@ describe('hash routing', () => {
   });
 
   it('rejects unknown routes', () => {
-    expect(parseRoute('#/gallery', LEVEL_COUNT)).toEqual({ name: 'unknown' });
+    expect(parseRoute('#/unknown', LEVEL_COUNT)).toEqual({ name: 'unknown' });
     expect(parseRoute('#/play', LEVEL_COUNT)).toEqual({ name: 'unknown' });
   });
 
   it('builds route hashes', () => {
     expect(routeHash({ name: 'home' })).toBe('#/');
     expect(routeHash({ name: 'levels' })).toBe('#/levels');
+    expect(routeHash({ name: 'gallery' })).toBe('#/gallery');
     expect(routeHash({ name: 'play', index: 0 })).toBe('#/play/1');
     expect(routeHash({ name: 'play', index: 11 })).toBe('#/play/12');
   });
@@ -44,12 +47,15 @@ describe('hash routing', () => {
 describe('safe route resolution', () => {
   const unlocked = (index: number): boolean => index < 2;
 
-  it('passes through home, levels, and unlocked play routes', () => {
+  it('passes through home, levels, gallery, and unlocked play routes', () => {
     expect(resolveRoute({ name: 'home' }, LEVEL_COUNT, unlocked)).toEqual({
       route: { name: 'home' },
     });
     expect(resolveRoute({ name: 'levels' }, LEVEL_COUNT, unlocked)).toEqual({
       route: { name: 'levels' },
+    });
+    expect(resolveRoute({ name: 'gallery' }, LEVEL_COUNT, unlocked)).toEqual({
+      route: { name: 'gallery' },
     });
     expect(resolveRoute({ name: 'play', index: 0 }, LEVEL_COUNT, unlocked)).toEqual({
       route: { name: 'play', index: 0 },

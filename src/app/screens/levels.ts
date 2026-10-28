@@ -65,7 +65,11 @@ export function levelsScreen(context: AppContext, notice: string | null): Screen
   );
   const gentlePill = el('span', 'pill');
   gentlePill.append(createIcon('sparkle', 'icon icon--sm'), 'No timers, no rush');
-  append(summary, starPill, clearedPill, gentlePill);
+  const galleryPill = el('button', 'pill levels-gallery');
+  galleryPill.type = 'button';
+  galleryPill.append(createIcon('gallery', 'icon icon--sm'), 'Gallery');
+  galleryPill.addEventListener('click', () => context.navigate('#/gallery'));
+  append(summary, starPill, clearedPill, gentlePill, galleryPill);
 
   const body = el('div', 'levels-body');
   if (notice) {

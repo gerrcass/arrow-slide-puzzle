@@ -1,6 +1,7 @@
 export type Route =
   | { readonly name: 'home' }
   | { readonly name: 'levels' }
+  | { readonly name: 'gallery' }
   | { readonly name: 'play'; readonly index: number };
 
 export type ParsedRoute = Route | { readonly name: 'unknown' };
@@ -27,6 +28,7 @@ export function parseRoute(hash: string, levelCount: number): ParsedRoute {
   const value = normalise(hash);
   if (value === '/') return { name: 'home' };
   if (value === '/levels') return { name: 'levels' };
+  if (value === '/gallery') return { name: 'gallery' };
 
   const playMatch = /^\/play\/(\d+)$/.exec(value);
   if (playMatch) {
@@ -43,6 +45,7 @@ export function parseRoute(hash: string, levelCount: number): ParsedRoute {
 export function routeHash(route: Route): string {
   if (route.name === 'home') return '#/';
   if (route.name === 'levels') return '#/levels';
+  if (route.name === 'gallery') return '#/gallery';
   return `#/play/${route.index + 1}`;
 }
 

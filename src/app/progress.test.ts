@@ -7,6 +7,7 @@ import {
   completedCount,
   continueLevel,
   defaultSave,
+  isConstellationCollected,
   isLevelUnlocked,
   parseSaveText,
   recordCompletion,
@@ -80,6 +81,14 @@ describe('save schema', () => {
     expect(isLevelUnlocked(save, 4, LEVEL_COUNT)).toBe(true);
     expect(isLevelUnlocked(save, 3, LEVEL_COUNT)).toBe(false);
     expect(isLevelUnlocked(save, 5, LEVEL_COUNT)).toBe(true);
+  });
+
+  it('collects a constellation from completion, independent of stars', () => {
+    const save = recordCompletion(defaultSave(), 0, 1, FIRST, LEVEL_COUNT);
+    expect(isConstellationCollected(save, 0, LEVEL_COUNT)).toBe(true);
+    expect(isConstellationCollected(save, 1, LEVEL_COUNT)).toBe(false);
+    expect(isConstellationCollected(save, -1, LEVEL_COUNT)).toBe(false);
+    expect(isConstellationCollected(save, LEVEL_COUNT, LEVEL_COUNT)).toBe(false);
   });
 
   it('never lowers best stars and keeps the first completion date', () => {

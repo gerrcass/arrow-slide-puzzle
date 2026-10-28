@@ -1,11 +1,16 @@
 import { HEADING_VECTORS } from '../../engine/geometry';
 import type { Board, Cell, Heading, Piece, RibbonColor } from '../../engine/types';
+import type { Constellation } from '../../content/schema';
+import { createConstellationArt } from './constellation';
 import { svgEl, svgPath } from './dom';
 import { RIBBON_PAINT } from './ribbonPalette';
 
 export interface BoardArt {
   readonly svg: SVGSVGElement;
   readonly groups: ReadonlyMap<string, SVGGElement>;
+  readonly frost: SVGGElement | null;
+  readonly holes: SVGGElement | null;
+  readonly constellation: SVGGElement | null;
 }
 
 export interface BoardArtOptions {
@@ -13,6 +18,7 @@ export interface BoardArtOptions {
   readonly interactive?: boolean;
   readonly accent?: RibbonColor;
   readonly className?: string;
+  readonly constellation?: Constellation | undefined;
 }
 
 let boardCounter = 0;
@@ -87,7 +93,19 @@ function pointsAttribute(points: readonly Cell[]): string {
   return points.map((point) => `${point.x.toFixed(3)},${point.y.toFixed(3)}`).join(' ');
 }
 
-function appendDefs(svg: SVGSVGElement, board: Board, uid: string, accent: RibbonColor): void {
+interface FrostDefs {
+  readonly mask: SVGMaskElement;
+  readonly holes: SVGGElement;
+  readonly clip: SVGClipPathElement;
+}
+
+function appendDefs(
+  svg: SVGSVGElement,
+  board: Board,
+  uid: string,
+  accent: RibbonColor,
+  withFrost: boolean,
+): FrostDefs | null {
   const defs = svgEl('defs');
 
   const surface = svgEl('linearGradient', {
@@ -177,10 +195,135 @@ function appendDefs(svg: SVGSVGElement, board: Board, uid: string, accent: Ribbo
   softBlur.append(svgEl('feGaussianBlur', { stdDeviation: '0.055' }));
 
   defs.append(pattern, softBlur);
+
+  if (!withFrost) {
+    svg.append(defs);
+    return null;
+  }
+
+  const clip = svgEl('clipPath', { id: `${uid}-board-clip` });
+  clip.append(
+    svgEl('rect', {
+      x: '0',
+      y: '0',
+      width: String(board.width),
+      height: String(board.height),
+      rx: '0.42',
+    }),
+  );
+
+  const frost = svgEl('linearGradient', {
+    id: `${uid}-frost`,
+    x1: '0.1',
+    y1: '0',
+    x2: '0.9',
+    y2: '1',
+  });
+  frost.append(
+    svgEl('stop', { offset: '0%', 'stop-color': '#433365', 'stop-opacity': '0.9' }),
+    svgEl('stop', { offset: '48%', 'stop-color': '#2d2050', 'stop-opacity': '0.925' }),
+    svgEl('stop', { offset: '100%', 'stop-color': '#1b1136', 'stop-opacity': '0.95' }),
+  );
+
+  const sheen = svgEl('linearGradient', {
+    id: `${uid}-frost-sheen`,
+    x1: '0',
+    y1: '0',
+    x2: '0.4',
+    y2: '1',
+  });
+  sheen.append(
+    svgEl('stop', { offset: '0%', 'stop-color': '#f4e9ff', 'stop-opacity': '0.16' }),
+    svgEl('stop', { offset: '38%', 'stop-color': '#c8a7ff', 'stop-opacity': '0.04' }),
+    svgEl('stop', { offset: '100%', 'stop-color': '#c8a7ff', 'stop-opacity': '0' }),
+  );
+
+  const hint = svgEl('radialGradient', { id: `${uid}-frost-hint` });
+  hint.append(
+    svgEl('stop', {
+      offset: '0%',
+      'stop-color': RIBBON_PAINT[accent].base,
+      'stop-opacity': '0.2',
+    }),
+    svgEl('stop', {
+      offset: '62%',
+      'stop-color': RIBBON_PAINT[accent].base,
+      'stop-opacity': '0.05',
+    }),
+    svgEl('stop', {
+      offset: '100%',
+      'stop-color': RIBBON_PAINT[accent].base,
+      'stop-opacity': '0',
+    }),
+  );
+
+  const crystals = svgEl('pattern', {
+    id: `${uid}-frost-crystals`,
+    width: '0.7',
+    height: '0.7',
+    patternUnits: 'userSpaceOnUse',
+  });
+  crystals.append(
+    svgPath('M 0.12 0.3 L 0.22 0.22 L 0.3 0.34', {
+      fill: 'none',
+      stroke: 'rgba(240, 226, 255, 0.09)',
+      'stroke-width': '0.012',
+      'stroke-linecap': 'round',
+    }),
+    svgEl('circle', {
+      cx: '0.52',
+      cy: '0.12',
+      r: '0.015',
+      fill: 'rgba(245, 234, 255, 0.16)',
+    }),
+    svgEl('circle', {
+      cx: '0.44',
+      cy: '0.56',
+      r: '0.01',
+      fill: 'rgba(224, 209, 255, 0.12)',
+    }),
+  );
+
+  const holeSoft = svgEl('filter', {
+    id: `${uid}-hole-soft`,
+    filterUnits: 'userSpaceOnUse',
+    x: '-0.2',
+    y: '-0.2',
+    width: String(board.width + 0.4),
+    height: String(board.height + 0.4),
+  });
+  holeSoft.append(svgEl('feGaussianBlur', { stdDeviation: '0.035' }));
+
+  const mask = svgEl('mask', {
+    id: `${uid}-frost-mask`,
+    maskUnits: 'userSpaceOnUse',
+    x: '0',
+    y: '0',
+    width: String(board.width),
+    height: String(board.height),
+  });
+  mask.append(
+    svgEl('rect', {
+      x: '0',
+      y: '0',
+      width: String(board.width),
+      height: String(board.height),
+      fill: '#ffffff',
+    }),
+  );
+  const holes = svgEl('g', {
+    class: 'frost-holes',
+    filter: `url(#${uid}-hole-soft)`,
+  });
+  mask.append(holes);
+
+  defs.append(clip, frost, sheen, hint, crystals, holeSoft, mask);
   svg.append(defs);
+
+  return { mask, holes, clip };
 }
 
-function appendBackground(svg: SVGSVGElement, board: Board, uid: string): void {
+function appendSurface(svg: SVGSVGElement, board: Board, uid: string): void {
   const surface = svgEl('rect', {
     x: '0',
     y: '0',
@@ -198,17 +341,105 @@ function appendBackground(svg: SVGSVGElement, board: Board, uid: string): void {
       rx: String(board.width * 0.66),
       ry: String(board.height * 0.66),
       fill: `url(#${uid}-glow)`,
+      class: 'board-nebula',
     }),
   );
+}
 
+function appendConstellation(
+  svg: SVGSVGElement,
+  board: Board,
+  uid: string,
+  constellation: Constellation,
+): SVGGElement {
+  const layer = svgEl('g', {
+    class: 'board-constellation',
+    'clip-path': `url(#${uid}-board-clip)`,
+  });
+  const art = createConstellationArt(constellation, {
+    className: 'constellation--board',
+  });
+  // The nested board art is sized by user-unit attributes, not the card CSS.
+  art.setAttribute('class', 'constellation--board');
+  art.setAttribute('x', '0');
+  art.setAttribute('y', '0');
+  art.setAttribute('width', String(board.width));
+  art.setAttribute('height', String(board.height));
+  layer.append(art);
+  svg.append(layer);
+  return layer;
+}
+
+function appendFrost(
+  svg: SVGSVGElement,
+  board: Board,
+  uid: string,
+  frostDefs: FrostDefs,
+): SVGGElement {
+  const group = svgEl('g', { class: 'board-frost', 'pointer-events': 'none' });
+  const clip = `url(#${frostDefs.clip.id})`;
+  const mask = `url(#${frostDefs.mask.id})`;
+  const width = String(board.width);
+  const height = String(board.height);
+
+  group.append(
+    svgEl('rect', {
+      class: 'board-frost__base',
+      x: '0',
+      y: '0',
+      width,
+      height,
+      rx: '0.42',
+      fill: `url(#${uid}-frost)`,
+      mask,
+      'clip-path': clip,
+    }),
+    svgEl('rect', {
+      class: 'board-frost__crystals',
+      x: '0',
+      y: '0',
+      width,
+      height,
+      rx: '0.42',
+      fill: `url(#${uid}-frost-crystals)`,
+      mask,
+      'clip-path': clip,
+      opacity: '0.9',
+    }),
+    svgEl('ellipse', {
+      class: 'board-frost__hint',
+      cx: String(board.width / 2),
+      cy: String(board.height / 2),
+      rx: String(board.width * 0.36),
+      ry: String(board.height * 0.36),
+      fill: `url(#${uid}-frost-hint)`,
+      'clip-path': clip,
+    }),
+    svgEl('rect', {
+      class: 'board-frost__sheen',
+      x: '0',
+      y: '0',
+      width,
+      height,
+      rx: '0.42',
+      fill: `url(#${uid}-frost-sheen)`,
+      'clip-path': clip,
+    }),
+  );
+  svg.append(group);
+  return group;
+}
+
+function appendBackdropDetails(svg: SVGSVGElement, board: Board, uid: string): void {
   const random = makeRandom(board.width * 131 + board.height * 977);
   const starCount = Math.round((board.width * board.height) / 3.4) + 4;
+  const stars = svgEl('g', { class: 'board-stars' });
   for (let index = 0; index < starCount; index += 1) {
     const x = 0.35 + random() * (board.width - 0.7);
     const y = 0.35 + random() * (board.height - 0.7);
     const radius = 0.014 + random() * 0.026;
     const opacity = 0.1 + random() * 0.2;
-    svg.append(
+    stars.append(
       svgEl('circle', {
         cx: x.toFixed(3),
         cy: y.toFixed(3),
@@ -219,6 +450,7 @@ function appendBackground(svg: SVGSVGElement, board: Board, uid: string): void {
       }),
     );
   }
+  svg.append(stars);
 
   svg.append(
     svgEl('rect', {
@@ -379,8 +611,28 @@ export function createBoardArt(board: Board, options: BoardArtOptions): BoardArt
     'aria-label': options.interactive ? 'Tangle board' : '',
   });
 
-  appendDefs(svg, board, uid, options.accent ?? 'rose');
-  appendBackground(svg, board, uid);
+  const frostDefs = appendDefs(
+    svg,
+    board,
+    uid,
+    options.accent ?? 'rose',
+    options.constellation !== undefined,
+  );
+  appendSurface(svg, board, uid);
+
+  let constellationLayer: SVGGElement | null = null;
+  let frost: SVGGElement | null = null;
+  if (options.constellation) {
+    constellationLayer = appendConstellation(
+      svg,
+      board,
+      uid,
+      options.constellation,
+    );
+    if (frostDefs) frost = appendFrost(svg, board, uid, frostDefs);
+  }
+
+  appendBackdropDetails(svg, board, uid);
 
   const groups = new Map<string, SVGGElement>();
   for (const piece of board.pieces) {
@@ -395,7 +647,13 @@ export function createBoardArt(board: Board, options: BoardArtOptions): BoardArt
     svg.setAttribute('focusable', 'false');
   }
 
-  return { svg, groups };
+  return {
+    svg,
+    groups,
+    frost,
+    holes: frostDefs?.holes ?? null,
+    constellation: constellationLayer,
+  };
 }
 
 export function describePiece(piece: Piece): string {

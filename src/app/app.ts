@@ -8,6 +8,7 @@ import {
 import type { ProgressStore } from './progress';
 import { parseRoute, resolveRoute, routeHash } from './router';
 import { homeScreen } from './screens/home';
+import { galleryScreen } from './screens/gallery';
 import { levelsScreen } from './screens/levels';
 import { playScreen } from './screens/play';
 import { openSettingsDialog } from './settingsDialog';
@@ -131,6 +132,11 @@ export class App {
 
     if (resolved.route.name === 'levels') {
       this.showScreen(levelsScreen(this.context, resolved.notice ?? null));
+      return;
+    }
+
+    if (resolved.route.name === 'gallery') {
+      this.showScreen(galleryScreen(this.context));
       return;
     }
 

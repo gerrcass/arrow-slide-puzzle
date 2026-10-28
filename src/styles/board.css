@@ -57,6 +57,22 @@
   filter: drop-shadow(0 0 0.06rem rgba(255, 246, 230, 0.45));
 }
 
+.board-constellation {
+  pointer-events: none;
+}
+
+.board-frost {
+  pointer-events: none;
+}
+
+.board-frost__hint {
+  opacity: 0.85;
+}
+
+.board-frost__sheen {
+  opacity: 0.85;
+}
+
 .ribbon {
   cursor: pointer;
   outline: none;

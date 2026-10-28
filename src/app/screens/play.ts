@@ -119,6 +119,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
     seed: level.seed,
     accent: chapter.accent,
     describedBy: instructionsId,
+    constellation: constellation ?? undefined,
     onActivate: (pieceId) => handleTap(pieceId),
   });
   stage.append(boardView.element);
@@ -262,7 +263,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
     const settled = settleAttempt(attempt);
     attempt = settled.attempt;
     boardView.render(attempt);
-    boardView.setLocked(false);
+    if (attempt.status === 'idle') boardView.setLocked(false);
     renderHud();
     updateControls();
 
@@ -273,7 +274,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
         const previousBest = context.progress.bestStars(level.index);
         context.progress.recordCompletion(level.index, starCount(event.stars));
         const best = context.progress.bestStars(level.index);
-        showWin(event.stars, previousBest, best);
+        void finishWin(event.stars, previousBest, best);
         return;
       }
       if (event.type === 'lost') {
@@ -281,6 +282,21 @@ export function playScreen(context: AppContext, level: Level): Screen {
         return;
       }
     }
+  }
+
+  async function finishWin(
+    stars: number,
+    previousBest: number,
+    best: number,
+  ): Promise<void> {
+    context.announce(
+      constellation
+        ? `The last ribbon leaves. ${constellation.name} is coming into view.`
+        : 'The last ribbon leaves. The frost clears.',
+    );
+    await boardView.revealBoard(context.isReducedMotion());
+    if (disposed) return;
+    showWin(stars, previousBest, best);
   }
 
   function showHint(): void {
@@ -333,7 +349,9 @@ export function playScreen(context: AppContext, level: Level): Screen {
     activeDialog?.close();
     activeDialog = null;
     attempt = resetAttempt(attempt);
+    boardView.resetReveals();
     boardView.render(attempt);
+    boardView.setLocked(false);
     renderHud();
     updateControls();
     context.announce('A fresh attempt. Three hearts.');
@@ -352,7 +370,9 @@ export function playScreen(context: AppContext, level: Level): Screen {
       );
       const name = el('p', 'win-constellation__name', constellation.name);
       const caption = el('p', 'win-constellation__caption', constellation.caption);
-      append(artWrap, name, caption);
+      const collected = el('p', 'win-constellation__collected');
+      collected.append(createIcon('check', 'icon icon--sm'), 'Constellation collected');
+      append(artWrap, name, caption, collected);
       visual.append(artWrap);
     }
     visual.append(createStarRow(stars, 3, { animated: true }));
@@ -380,9 +400,9 @@ export function playScreen(context: AppContext, level: Level): Screen {
         onSelect: restart,
       });
       actions.push({
-        label: 'Levels',
+        label: 'View gallery',
         variant: 'ghost',
-        onSelect: () => context.navigate('#/levels'),
+        onSelect: () => context.navigate('#/gallery'),
       });
     } else {
       actions.push({
@@ -392,8 +412,13 @@ export function playScreen(context: AppContext, level: Level): Screen {
         onSelect: () => context.navigate('#/levels'),
       });
       actions.push({
-        label: 'Play again',
+        label: 'View gallery',
         variant: 'secondary',
+        onSelect: () => context.navigate('#/gallery'),
+      });
+      actions.push({
+        label: 'Play again',
+        variant: 'ghost',
         onSelect: restart,
       });
     }

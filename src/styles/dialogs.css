@@ -169,25 +169,50 @@
   filter: drop-shadow(0 0 0.8rem rgba(255, 210, 122, 0.25));
 }
 
+.constellation-motif {
+  opacity: 0.34;
+}
+
+.constellation-motif-halo {
+  opacity: 0.22;
+}
+
+.constellation-orbit ellipse {
+  fill: none;
+  stroke: var(--constellation-accent, var(--color-lilac));
+  stroke-width: 0.32;
+  stroke-dasharray: 1.4 5;
+  opacity: 0.3;
+}
+
+.constellation-dust circle {
+  fill: var(--constellation-light, var(--color-gold-soft));
+}
+
 .constellation-lines line {
-  stroke: rgba(255, 210, 122, 0.48);
-  stroke-width: 0.55;
+  stroke: rgba(255, 210, 122, 0.5);
+  stroke-width: 0.6;
   stroke-linecap: round;
 }
 
-.constellation-stars circle {
+.constellation-stars .constellation-star {
   fill: var(--color-gold-soft);
 }
 
 .constellation-halo {
   fill: var(--color-gold);
-  opacity: 0.07;
+  opacity: 0.09;
   filter: blur(1.5px);
 }
 
 .constellation--win {
   width: 11rem;
   height: 11rem;
+}
+
+.constellation--board {
+  display: block;
+  pointer-events: none;
 }
 
 .win-constellation__name {
@@ -205,6 +230,27 @@
   color: var(--color-text-dim);
   font-size: var(--text-xs);
   line-height: 1.5;
+}
+
+.win-constellation__collected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: var(--space-2);
+  padding: 0.28rem 0.6rem;
+  border: 1px solid rgba(255, 210, 122, 0.28);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 210, 122, 0.09);
+  color: var(--color-gold-soft);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.win-constellation__collected .icon {
+  width: 0.8rem;
+  height: 0.8rem;
 }
 
 .star-row {

@@ -14,7 +14,8 @@ export type IconName =
   | 'close'
   | 'check'
   | 'moon'
-  | 'sparkle';
+  | 'sparkle'
+  | 'gallery';
 
 const STROKE = {
   fill: 'none',
@@ -81,6 +82,20 @@ function lineIcon(name: IconName, svg: SVGSVGElement): void {
       break;
     case 'sparkle':
       path('M12 2.8c.5 4.4 2.4 6.3 6.8 6.8-4.4.5-6.3 2.4-6.8 6.8-.5-4.4-2.4-6.3-6.8-6.8 4.4-.5 6.3-2.4 6.8-6.8Z');
+      break;
+    case 'gallery':
+      svg.append(
+        svgEl('rect', {
+          x: '3.5',
+          y: '4.5',
+          width: '17',
+          height: '15',
+          rx: '3.2',
+          ...STROKE,
+        }),
+      );
+      path('M8 16.2 11.2 12l2.5 3 2-2.2 3.3 4.4');
+      path('M15.8 9.4c.2 1.4 1 2.2 2.4 2.4-1.4.2-2.2 1-2.4 2.4-.2-1.4-1-2.2-2.4-2.4 1.4-.2 2.2-1 2.4-2.4Z');
       break;
     case 'heart':
     case 'star':
