@@ -6,7 +6,8 @@
  * visit is enough for offline play.
  */
 
-const CACHE = 'nana-pearl-shell-v1';
+const CACHE_PREFIX = 'nana-pearl-shell-';
+const CACHE = `${CACHE_PREFIX}v1`;
 const ROOT = new URL('./', self.registration.scope);
 
 function assetUrlsFromHtml(html) {
@@ -77,7 +78,11 @@ self.addEventListener('activate', (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))),
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE)
+            .map((key) => caches.delete(key)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -114,15 +119,12 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(request).then((cached) => {
+    caches.open(CACHE).then(async (cache) => {
+      const cached = await cache.match(request);
       if (cached) return cached;
-      return fetch(request).then(async (response) => {
-        if (response.ok) {
-          const cache = await caches.open(CACHE);
-          await cache.put(request, response.clone());
-        }
-        return response;
-      });
+      const response = await fetch(request);
+      if (response.ok) await cache.put(request, response.clone());
+      return response;
     }),
   );
 });

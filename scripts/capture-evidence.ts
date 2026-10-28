@@ -175,6 +175,11 @@ async function mobile(): Promise<void> {
   await page.goto(`${BASE}/#/`);
   await page.locator('[data-screen-heading]').waitFor({ state: 'visible' });
   await page.screenshot({ path: `${SHOTS}/home-mobile.png` });
+
+  await page.getByRole('button', { name: 'Settings' }).click();
+  await page.getByRole('dialog', { name: 'Settings' }).waitFor({ state: 'visible' });
+  await page.waitForTimeout(300);
+  await page.screenshot({ path: `${OUT}/settings-390.png` });
   await context.close();
 }
 

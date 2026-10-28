@@ -356,6 +356,29 @@ export const CONSTELLATIONS: readonly Constellation[] = [
   },
 ];
 
+/**
+ * A non-spoiling riddle for locked gallery and level cards. Deliberately kept
+ * in the content layer so the reward's name and art have one source of truth.
+ */
+const CONSTELLATION_HINTS: Readonly<Record<string, string>> = {
+  'the-pearl': 'Round, small, patient',
+  'the-kite': 'Paper on a string',
+  'the-cup': 'A warm drink',
+  'the-wishing-star': 'Five points, one wish',
+  'the-current': 'A moving line',
+  'the-net': 'Cast wide, left to dry',
+  'the-comet': 'A bright head, long tail',
+  'the-lantern': 'A light left on',
+  'the-knot': 'Do not pull',
+  'the-crown': 'A monarch needs none',
+  'the-orchard': 'Branches remember wind',
+  'nanas-sky': 'A whole sky, gathered',
+};
+
 export function constellationById(id: string): Constellation | null {
   return CONSTELLATIONS.find((constellation) => constellation.id === id) ?? null;
+}
+
+export function constellationHint(id: string): string {
+  return CONSTELLATION_HINTS[id] ?? 'A hidden constellation';
 }

@@ -4,13 +4,13 @@
 
 **Blocked by:** None (can start immediately).
 
-**Status:** ready-for-agent
+**Status:** done
 
-- [ ] Vite + strict TypeScript + Vitest project with `dev`, `build`, `preview`, `typecheck`, and `test` commands.
-- [ ] Domain engine supports pieces as ordered cell paths with a heading, full-exit clearance sweeps, removal, hearts, and win/loss, with no DOM imports.
-- [ ] One handcrafted level is playable by mouse, touch, and keyboard; clear ribbons animate fully off the board; blocked ribbons lurch, flash the blocker, and do not move.
-- [ ] HUD shows level name, three hearts, and cleared/total progress; hearts update exactly once per collision.
-- [ ] Win and failure overlays offer replay/retry and are focus-managed; the board locks during animation and unlocks when resolution ends.
-- [ ] Engine tests cover straight, bent, partially off-board, immediate block, late block, edge, single-cell, win, loss, and retry cases.
-- [ ] Layout fits a 320 px viewport without horizontal scrolling; a 390×844 mobile check is captured as evidence.
-- [ ] `typecheck`, `test`, and production build pass.
+- [x] Vite + strict TypeScript + Vitest project with `dev`, `build`, `preview`, `typecheck`, and `test` commands.
+- [x] Domain engine supports pieces as ordered cell paths with a heading, full-exit clearance sweeps, removal, hearts, and win/loss, with no DOM imports.
+- [x] One handcrafted level is playable by mouse, touch, and keyboard; clear ribbons animate fully off the board; blocked ribbons lurch, flash the blocker, and do not move.
+- [x] HUD shows level name, three hearts, and cleared/total progress; hearts update exactly once per collision.
+- [x] Win and failure overlays offer replay/retry and are focus-managed; the board locks during animation and unlocks when resolution ends.
+- [x] Engine tests cover straight, bent, partially off-board, immediate block, late block, edge, single-cell, win, loss, and retry cases.
+- [x] Layout fits a 320 px viewport without horizontal scrolling; a 390×844 mobile check is captured as evidence.
+- [x] `typecheck`, `test`, and production build pass.

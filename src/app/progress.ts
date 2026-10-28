@@ -430,8 +430,12 @@ export class ProgressStore {
     }));
   }
 
+  /**
+   * Clear campaign progress and tutorial flags, but keep preferences. A player
+   * who relies on reduced motion or assistive mode must not lose it to a reset.
+   */
   reset(): void {
-    this.save = defaultSave();
+    this.save = { ...defaultSave(), settings: this.save.settings };
     this.persist();
   }
 

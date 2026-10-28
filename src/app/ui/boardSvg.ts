@@ -14,7 +14,6 @@ export interface BoardArt {
 }
 
 export interface BoardArtOptions {
-  readonly seed: number;
   readonly interactive?: boolean;
   readonly accent?: RibbonColor;
   readonly className?: string;

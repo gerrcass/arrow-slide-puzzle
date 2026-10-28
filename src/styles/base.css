@@ -141,6 +141,7 @@ a {
   z-index: var(--z-screen);
   width: min(100%, 74rem);
   min-height: 100dvh;
+  outline: none;
   margin: 0 auto;
   padding-top: max(var(--space-5), env(safe-area-inset-top));
   padding-bottom: max(var(--space-5), env(safe-area-inset-bottom));

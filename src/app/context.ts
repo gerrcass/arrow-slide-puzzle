@@ -12,6 +12,8 @@ export interface AppContext {
   readonly audio: AudioEngine;
   readonly navigate: (hash: string) => void;
   readonly announce: (message: string, priority?: 'polite' | 'assertive') => void;
+  /** A separate polite channel so Nana never overwrites game feedback. */
+  readonly announceGuide: (message: string) => void;
   readonly setSound: (enabled: boolean) => void;
   readonly openSettings: () => DialogHandle | null;
   readonly isReducedMotion: () => boolean;

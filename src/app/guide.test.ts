@@ -7,6 +7,7 @@ import {
   guideMomentCopy,
   guideOnClear,
   guideOnCollision,
+  guideOnHint,
   guideOnLoss,
   guideOnWin,
   guideSetTips,
@@ -115,6 +116,21 @@ describe('Nana Pearl guide state', () => {
     const onAgain = guideSetTips(off, true);
     expect(onAgain.bubble?.kind).toBe('tutorial');
     expect(onAgain.bubble?.beat).toBe(1);
+  });
+
+  it('offers the first hint tip only after the tutorial, exactly once', () => {
+    const nudged = guideOnHint(guideSkipIntro(fresh()));
+    expect(nudged.bubble?.kind).toBe('hint');
+    expect(nudged.bubble?.expression).toBe('warm');
+    expect(nudged.flags.hintTipSeen).toBe(true);
+    expect(guideBubbleCopy(nudged)).toContain('nudge');
+
+    const again = guideOnHint({ ...nudged, bubble: null });
+    expect(again.bubble).toBeNull();
+    expect(again).not.toBe(nudged);
+    expect(guideOnHint(again)).toBe(again);
+    const active = started();
+    expect(guideOnHint(active)).toBe(active);
   });
 
   it('dismissing a tutorial bubble skips the rest of the beats', () => {

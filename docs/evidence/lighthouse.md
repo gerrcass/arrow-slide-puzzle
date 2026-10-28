@@ -1,6 +1,6 @@
 # Lighthouse evidence
 
-**Date:** 2026-10-28
+**Date:** 2026-10-28 (final layout pass)
 **Build:** production `npm run build`, served by `vite preview`
 **Tool:** Lighthouse 13 (mobile defaults)
 **Page:** `http://127.0.0.1:4321/`
@@ -12,7 +12,7 @@
 | Best practices | **100** |
 | SEO | **100** |
 
-Core metrics: LCP **0.8 s**, CLS **0**, TBT **10 ms**.
+Core metrics: LCP **0.8 s**, CLS **0**, TBT **20 ms**.
 
 Command:
 

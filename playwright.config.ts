@@ -5,8 +5,8 @@ const PORT = 4317;
 const baseURL = `http://127.0.0.1:${PORT}`;
 const systemChromium = '/usr/bin/chromium-browser';
 const executablePath =
-  process.env.PLAYWRIGHT_CHROMIUM ??
-  (existsSync(systemChromium) ? systemChromium : undefined);
+  process.env.PLAYWRIGHT_CHROMIUM ||
+  (!process.env.CI && existsSync(systemChromium) ? systemChromium : undefined);
 
 export default defineConfig({
   testDir: './e2e',
@@ -16,7 +16,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 4,
   timeout: 45_000,
   expect: { timeout: 7_000 },
-  reporter: [['list']],
+  reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL,
     browserName: 'chromium',

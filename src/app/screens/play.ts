@@ -20,6 +20,7 @@ import {
   guideMomentCopy,
   guideOnClear,
   guideOnCollision,
+  guideOnHint,
   guideOnLoss,
   guideOnWin,
   guideSetTips,
@@ -157,8 +158,15 @@ export function playScreen(context: AppContext, level: Level): Screen {
   stage.id = 'tangle-board';
   stage.tabIndex = -1;
   stage.setAttribute('aria-label', 'Tangle board');
+  skip.addEventListener('click', (event) => {
+    event.preventDefault();
+    stage.focus({ preventScroll: true });
+    stage.scrollIntoView({
+      behavior: context.isReducedMotion() ? 'auto' : 'smooth',
+      block: 'center',
+    });
+  });
   const boardView = new BoardView(level.board, {
-    seed: level.seed,
     accent: chapter.accent,
     describedBy: instructionsId,
     constellation: constellation ?? undefined,
@@ -212,7 +220,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
   });
 
   const onKeyDown = (event: KeyboardEvent): void => {
-    if (event.defaultPrevented) return;
+    if (event.defaultPrevented || event.repeat || event.isComposing) return;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (document.querySelector('dialog[open]')) return;
     const target = event.target;
@@ -286,7 +294,6 @@ export function playScreen(context: AppContext, level: Level): Screen {
     if (disposed) return;
     guideSlot.replaceChildren();
     const bubble = guide.bubble;
-    guideSlot.classList.toggle('has-guide', bubble !== null && guide.tipsEnabled);
     if (!bubble || !guide.tipsEnabled) return;
     const text = guideBubbleCopy(guide);
     guideSlot.append(
@@ -297,14 +304,14 @@ export function playScreen(context: AppContext, level: Level): Screen {
         onDismiss: dismissGuide,
       }),
     );
-    if (announce) context.announce(`Nana Pearl: ${text}`);
+    if (announce) context.announceGuide(`Nana Pearl: ${text}`);
   }
 
   function dismissGuide(): void {
     if (!guide.bubble) return;
     applyGuide(guideDismiss(guide));
     renderGuide(false);
-    heading.focus({ preventScroll: true });
+    stage.focus({ preventScroll: true });
   }
 
   function syncGuideSettings(): void {
@@ -343,7 +350,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
       activeDialog = null;
       applyGuide(guideSkipIntro(guide));
       renderGuide(false);
-      heading.focus({ preventScroll: true });
+      stage.focus({ preventScroll: true });
     };
 
     activeDialog = openDialog({
@@ -417,8 +424,11 @@ export function playScreen(context: AppContext, level: Level): Screen {
         'assertive',
       );
       if (previousHearts > attempt.hearts) breakHeart();
-      applyGuide(guideOnCollision(guide, attempt.hearts));
-      renderGuide();
+      const nextGuide = guideOnCollision(guide, attempt.hearts);
+      if (nextGuide !== guide) {
+        applyGuide(nextGuide);
+        renderGuide();
+      }
     } else {
       context.audio.play('slide', { steps: resolution.steps });
       context.announce(
@@ -435,8 +445,21 @@ export function playScreen(context: AppContext, level: Level): Screen {
           resolution.kind === 'slide',
         ),
       )
-      .catch(() => {
-        // A cancelled animation during navigation is not a game error.
+      .catch((error: unknown) => {
+        if (disposed) return;
+        // A cancelled animation is expected during navigation; anything else
+        // must not leave the board permanently locked.
+        const settled = settleAttempt(attempt).attempt;
+        attempt = settled;
+        boardView.render(attempt);
+        boardView.setLocked(false);
+        renderHud();
+        updateControls();
+        console.warn('Slide animation failed', error);
+        context.announce(
+          'The ribbon animation stopped unexpectedly. The board is ready again.',
+          'assertive',
+        );
       });
   }
 
@@ -456,8 +479,11 @@ export function playScreen(context: AppContext, level: Level): Screen {
     if (wasFocused && clearedId) boardView.focusNextAfter(clearedId);
 
     if (wasSlide) {
-      applyGuide(guideOnClear(guide, attempt.cleared.length));
-      if (attempt.status !== 'won') renderGuide();
+      const nextGuide = guideOnClear(guide, attempt.cleared.length);
+      if (nextGuide !== guide) {
+        applyGuide(nextGuide);
+        if (attempt.status !== 'won') renderGuide();
+      }
     }
 
     for (const event of settled.events) {
@@ -485,7 +511,12 @@ export function playScreen(context: AppContext, level: Level): Screen {
     best: number,
   ): Promise<void> {
     context.audio.play('win');
-    await boardView.revealBoard(context.isReducedMotion());
+    try {
+      await boardView.revealBoard(context.isReducedMotion());
+    } catch (error) {
+      // The result still matters if a decorative animation fails.
+      console.warn('Reveal animation failed', error);
+    }
     if (disposed) return;
     showWin(stars, previousBest, best);
   }
@@ -502,6 +533,11 @@ export function playScreen(context: AppContext, level: Level): Screen {
     context.announce(
       `Try the ${ribbonColourName(piece.color)} ribbon. It is clear, pointing ${piece.heading}.`,
     );
+    const nextGuide = guideOnHint(guide);
+    if (nextGuide !== guide) {
+      applyGuide(nextGuide);
+      renderGuide();
+    }
   }
 
   function describeClearRibbons(): void {
@@ -554,13 +590,15 @@ export function playScreen(context: AppContext, level: Level): Screen {
     activeDialog?.close();
     activeDialog = null;
     attempt = resetAttempt(attempt);
+    guide = { ...guide, bubble: null, moment: null };
     boardView.resetReveals();
     boardView.render(attempt);
     boardView.setLocked(false);
     renderHud();
     updateControls();
+    renderGuide(false);
     context.announce('A fresh attempt. Three hearts.');
-    heading.focus();
+    stage.focus({ preventScroll: true });
   }
 
   function showWin(stars: number, previousBest: number, best: number): void {

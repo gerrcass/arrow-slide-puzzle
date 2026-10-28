@@ -162,6 +162,17 @@ describe('full-exit clearance', () => {
     ]);
   });
 
+  it('ignores the piece’s cells once they have left the board', () => {
+    const long = makePiece('long', [
+      [2, 0],
+      [1, 0],
+      [0, 0],
+    ]);
+    const behind = makePiece('behind', [[3, 0]], 'rose', 'right');
+    const board = makeBoard(4, 1, [long, behind]);
+    expect(clear(long, board)).toEqual({ kind: 'clear', steps: 3 });
+  });
+
   it('swept cells cover the field between the ribbon and the exit', () => {
     const piece = makePiece('a', [
       [0, 0],

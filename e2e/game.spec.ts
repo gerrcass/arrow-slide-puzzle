@@ -5,7 +5,7 @@ import { clearanceFor } from '../src/engine/clearance';
 import { solveBoard } from '../src/engine/solver';
 import { SAVE_KEY } from '../src/app/progress';
 import { seriousAxeViolations } from './axe';
-import { noHorizontalOverflow, seedSave } from './helpers';
+import { noHorizontalOverflow, seedSave, shot } from './helpers';
 
 const FIRST = LEVELS[0]!;
 
@@ -64,7 +64,7 @@ test.describe('first run', () => {
     const welcome = page.getByRole('dialog');
     await expect(welcome).toBeVisible();
     await expect(welcome.getByRole('heading', { name: 'Oh, hello dear' })).toBeVisible();
-    await welcome.getByRole('button', { name: 'Skip for now' }).click();
+    await welcome.getByRole('button', { name: 'Skip tutorial' }).click();
     await expect(welcome).toBeHidden();
     await expect(page.locator('.ribbon')).toHaveCount(FIRST.board.pieces.length);
     await expect(page.getByRole('heading', { name: FIRST.title })).toBeVisible();
@@ -103,7 +103,7 @@ test.describe('play', () => {
     expect(constellation).toBeDefined();
     await expect(dialog).toContainText(constellation!.name);
     await expect(dialog).toContainText('Constellation collected');
-    await page.screenshot({ path: 'docs/evidence/win-polished-390.png' });
+    await shot(page, 'win-polished-390.png');
     const winViolations = await seriousAxeViolations(page);
     expect(
       winViolations,
@@ -117,7 +117,7 @@ test.describe('play', () => {
       'tagName',
       'BUTTON',
     );
-    await page.screenshot({ path: 'docs/evidence/gallery-polished-390.png' });
+    await shot(page, 'gallery-polished-390.png');
 
     const stored = await page.evaluate((key) => {
       const raw = window.localStorage.getItem(key);
@@ -130,6 +130,7 @@ test.describe('play', () => {
     await page.goto('/#/levels');
     await expect(page.locator('.level-card').nth(1)).toBeEnabled();
     await expect(page.locator('.level-card').first()).toContainText('Replay');
+    await expect(page.locator('.level-card').first()).toContainText('The Pearl');
   });
 
   test('keyboard-only clear and the H hint', async ({ page }) => {
@@ -155,7 +156,7 @@ test.describe('play', () => {
     await expect(page.locator('.board-svg')).toHaveAttribute('aria-busy', 'false');
 
     await page.keyboard.press('h');
-    await expect(page.locator('.live-region[aria-live="polite"]')).toContainText('Try the');
+    await expect(page.locator('.live-region--game')).toContainText('Try the');
     await expect(page.locator('.ribbon.is-hinted')).toHaveCount(1);
   });
 
@@ -170,7 +171,7 @@ test.describe('play', () => {
     const describe = page.getByRole('button', { name: 'Describe clear ribbons' });
     await expect(describe).toBeVisible();
     await describe.click();
-    await expect(page.locator('.live-region[aria-live="polite"]')).toContainText(
+    await expect(page.locator('.live-region--game')).toContainText(
       /(clear ribbon|clear ribbons)/i,
     );
   });
@@ -209,11 +210,11 @@ test.describe('play', () => {
   test('settings persist sound, motion, assistive mode, and tips', async ({ page }) => {
     await seedSave(page);
     await page.goto('/');
-    await page.screenshot({ path: 'docs/evidence/home-polished-390.png' });
+    await shot(page, 'home-polished-390.png');
     await page.getByRole('button', { name: 'Settings' }).click();
     const dialog = page.getByRole('dialog', { name: 'Settings' });
     await expect(dialog).toBeVisible();
-    await page.screenshot({ path: 'docs/evidence/settings-390.png' });
+    await shot(page, 'settings-390.png');
 
     await dialog.locator('.settings-toggle', { hasText: 'Sound' }).click();
     await dialog.locator('.settings-choice', { hasText: 'Reduced motion' }).click();
@@ -222,7 +223,7 @@ test.describe('play', () => {
     await dialog
       .locator('.dialog-panel')
       .evaluate((panel) => panel.scrollTo({ top: panel.scrollHeight }));
-    await page.screenshot({ path: 'docs/evidence/settings-access-390.png' });
+    await shot(page, 'settings-access-390.png');
     await dialog.getByRole('button', { name: 'Done' }).click();
     await expect(dialog).toBeHidden();
 
@@ -255,6 +256,129 @@ test.describe('play', () => {
     await expect(reloaded.getByRole('radio', { name: 'Reduced motion' })).toBeChecked();
     await expect(reloaded.getByRole('checkbox', { name: /^Assistive mode/ })).toBeChecked();
     await expect(reloaded.getByRole('checkbox', { name: /^Tips from Nana Pearl/ })).toBeChecked();
+  });
+
+  test('the skip link focuses the board without leaving the level', async ({ page }) => {
+    await seedSave(page);
+    await page.goto('/#/play/1');
+    await expect(page.getByRole('heading', { name: FIRST.title })).toBeVisible();
+
+    await page.keyboard.press('Tab');
+    const firstFocus = await page.evaluate(() => document.activeElement?.className ?? '');
+    expect(firstFocus).toContain('skip-link');
+
+    await page.keyboard.press('Tab');
+    const secondFocus = await page.evaluate(() =>
+      document.activeElement?.getAttribute('aria-label'),
+    );
+    expect(secondFocus).toBe('Back to level select');
+
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/#\/play\/1$/);
+    const focused = await page.evaluate(() => document.activeElement?.id);
+    expect(focused).toBe('tangle-board');
+  });
+
+  test('Nana does not replace the clear announcement', async ({ page }) => {
+    await seedSave(page, { introSeen: true, tutorialDone: false, tips: true });
+    await page.goto('/#/play/1');
+    const order = solutionFor(0);
+    for (const id of order.slice(0, 2)) {
+      await ribbon(page, id).click();
+      await page.waitForFunction(
+        () => document.querySelector('.board-svg')?.getAttribute('aria-busy') === 'false',
+        null,
+        { timeout: 7000 },
+      );
+    }
+    await expect(page.locator('.live-region--game')).toContainText(
+      /Cleared the .* ribbon\. 2 of 6 cleared/,
+    );
+    await expect(page.locator('.live-region--guide')).toContainText('Nana Pearl:');
+  });
+
+  test('a held key cannot activate a ribbon twice', async ({ page }) => {
+    await seedSave(page);
+    await page.goto('/#/play/1');
+    const piece = ribbon(page, solutionFor(0)[0]!);
+    await piece.focus();
+    await piece.evaluate((node) => {
+      node.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, repeat: true }),
+      );
+    });
+    await expect(piece).toBeVisible();
+    await piece.press('Enter');
+    await expect(piece).toBeHidden();
+  });
+
+  test('three collisions end the attempt and retry restores the board', async ({ page }) => {
+    await seedSave(page);
+    await page.goto('/#/play/1');
+    const blocked = ribbon(page, blockedPieceId());
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      await blocked.click();
+      await page.waitForFunction(
+        () => document.querySelector('.board-svg')?.getAttribute('aria-busy') === 'false',
+        null,
+        { timeout: 7000 },
+      ).catch(() => undefined);
+    }
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByRole('heading', { name: 'Out of hearts' })).toBeVisible();
+    await dialog.getByRole('button', { name: 'Try again' }).click();
+    await expect(page.locator('.heart-row')).toHaveAttribute(
+      'aria-label',
+      '3 of 3 hearts remaining',
+    );
+    await expect(page.locator('.ribbon')).toHaveCount(FIRST.board.pieces.length);
+  });
+
+  test('resetting progress keeps preferences', async ({ page }) => {
+    await seedSave(page, {
+      sound: true,
+      assistive: true,
+      motion: 'reduced',
+      tips: false,
+    });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await page.getByRole('button', { name: 'Reset progress' }).click();
+    await page.getByRole('button', { name: 'Tap again to erase' }).click();
+    await expect(page).toHaveURL(/#\/levels$/);
+    const settings = await page.evaluate((key) => {
+      const raw = window.localStorage.getItem(key);
+      return raw
+        ? (JSON.parse(raw) as {
+            settings: {
+              sound: boolean;
+              motion: string;
+              assistive: boolean;
+              tips: boolean;
+            };
+          }).settings
+        : null;
+    }, SAVE_KEY);
+    expect(settings).toMatchObject({
+      sound: true,
+      motion: 'reduced',
+      assistive: true,
+      tips: false,
+    });
+  });
+
+  test('locked cards hint at the constellation without naming it', async ({ page }) => {
+    await seedSave(page);
+    await page.goto('/#/gallery');
+    const first = page.locator('.gallery-card').first();
+    await expect(first).toContainText('A hidden constellation');
+    await expect(first).toContainText('Round, small, patient');
+
+    await page.goto('/#/levels');
+    await expect(page.locator('.level-card').first().locator('.level-card__constellation')).toHaveText(
+      'Round, small, patient',
+    );
   });
 });
 
@@ -294,12 +418,12 @@ test.describe('responsive', () => {
     await seedSave(page);
     await page.goto('/#/levels');
     expect(await noHorizontalOverflow(page)).toBe(true);
-    await page.screenshot({ path: 'docs/evidence/levels-polished-390.png' });
+    await shot(page, 'levels-polished-390.png');
 
     await page.goto('/#/play/1');
     await expect(page.locator('.ribbon')).toHaveCount(FIRST.board.pieces.length);
     expect(await noHorizontalOverflow(page)).toBe(true);
-    await page.screenshot({ path: 'docs/evidence/play-polished-390.png' });
+    await shot(page, 'play-polished-390.png');
 
     await page.setViewportSize({ width: 320, height: 568 });
     expect(await noHorizontalOverflow(page)).toBe(true);
@@ -320,15 +444,15 @@ test.describe('responsive', () => {
       });
     });
     expect(clipped).toBe(false);
-    await page.screenshot({ path: 'docs/evidence/play-320.png' });
+    await shot(page, 'play-320.png');
 
     await page.goto('/#/levels');
     expect(await noHorizontalOverflow(page)).toBe(true);
-    await page.screenshot({ path: 'docs/evidence/levels-320.png' });
+    await shot(page, 'levels-320.png');
 
     await page.goto('/#/gallery');
     expect(await noHorizontalOverflow(page)).toBe(true);
-    await page.screenshot({ path: 'docs/evidence/gallery-320.png' });
+    await shot(page, 'gallery-320.png');
   });
 
   test('a desktop guide bubble does not push the footer out of view', async ({ page }) => {
@@ -343,6 +467,84 @@ test.describe('responsive', () => {
     const viewportHeight = await page.evaluate(() => window.innerHeight);
     expect(footerBottom).toBeLessThanOrEqual(viewportHeight + 1);
     await expect(page.locator('.play-footer')).toBeInViewport();
+  });
+
+  test('320 px keeps the board still and the footer visible with a guide', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await seedSave(page, { collisionTipSeen: false, tips: true });
+    await page.goto('/#/play/1');
+    const board = page.locator('.board-frame');
+    const before = await board.boundingBox();
+    await ribbon(page, blockedPieceId()).click();
+    await expect(page.locator('.guide-moment')).toBeVisible();
+    await expect(page.locator('.play-footer')).toBeInViewport();
+    const after = await board.boundingBox();
+    expect(Math.abs((before?.y ?? 0) - (after?.y ?? 0))).toBeLessThan(2);
+    const footerBottom = await page.locator('.play-footer').evaluate((node) => {
+      return node.getBoundingClientRect().bottom;
+    });
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    expect(footerBottom).toBeLessThanOrEqual(viewportHeight + 1);
+    await shot(page, 'play-320-guide.png');
+  });
+
+  test('320 px keeps every win action in view', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await seedSave(page);
+    await page.goto('/#/play/1');
+    await clearLevel(page, 0);
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    const boxes = await dialog.locator('.dialog-actions button').evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom };
+      }),
+    );
+    expect(boxes.length).toBeGreaterThan(0);
+    for (const box of boxes) {
+      expect(box.top).toBeGreaterThanOrEqual(-1);
+      expect(box.bottom).toBeLessThanOrEqual(viewportHeight + 1);
+    }
+    await page.waitForTimeout(900);
+    await shot(page, 'win-320.png');
+  });
+
+  test('landscape keeps a usable board and a visible footer', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await seedSave(page);
+    await page.goto('/#/play/1');
+    const board = await page.locator('.board-frame').boundingBox();
+    expect(board?.width ?? 0).toBeGreaterThan(250);
+    await expect(page.locator('.play-footer')).toBeInViewport();
+    expect(await noHorizontalOverflow(page)).toBe(true);
+    await shot(page, 'play-landscape.png');
+
+    for (const route of ['/#/', '/#/levels', '/#/gallery']) {
+      await page.goto(route);
+      expect(await noHorizontalOverflow(page), route).toBe(true);
+    }
+  });
+
+  test('settings fit 320 px and the selected option has a visible tick', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await seedSave(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Settings' }).click();
+    const panel = page.locator('.dialog--settings .dialog-panel');
+    const sizes = await panel.evaluate((node) => ({
+      scrollWidth: node.scrollWidth,
+      clientWidth: node.clientWidth,
+    }));
+    expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.clientWidth + 1);
+    const checked = page.locator('.settings-choice:has(input:checked)').first();
+    const tick = await checked.evaluate((node) => {
+      const style = getComputedStyle(node, '::before');
+      return { content: style.content, color: style.color };
+    });
+    expect(tick.content).toContain('✓');
+    expect(tick.color).not.toBe('rgba(0, 0, 0, 0)');
   });
 });
 
@@ -400,6 +602,7 @@ test.describe('motion', () => {
     await expect(dialog.getByRole('heading', { name: 'Tangle untangled' })).toBeVisible();
     await expect(page.locator('.star-burst--win')).toHaveCount(0);
     await expect(page.locator('html')).toHaveAttribute('data-motion', 'reduced');
+    await shot(page, 'win-reduced-motion.png');
   });
 });
 
@@ -466,6 +669,25 @@ test.describe('accessibility scan', () => {
     await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
     const violations = await seriousAxeViolations(page);
     await testInfo.attach('axe-settings.json', {
+      body: JSON.stringify(violations, null, 2),
+      contentType: 'application/json',
+    });
+    expect(
+      violations,
+      violations.map((v) => `${v.id}: ${v.targets.join(', ')}`).join('; '),
+    ).toEqual([]);
+  });
+
+  test('settings at 320 px has no serious or critical axe violations', async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await seedSave(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
+    const violations = await seriousAxeViolations(page);
+    await testInfo.attach('axe-settings-320.json', {
       body: JSON.stringify(violations, null, 2),
       contentType: 'application/json',
     });

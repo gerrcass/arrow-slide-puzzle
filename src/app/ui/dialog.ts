@@ -29,10 +29,9 @@ let dialogCounter = 0;
 
 export function openDialog(options: DialogOptions): DialogHandle {
   dialogCounter += 1;
+  const previouslyFocused = document.activeElement;
   const titleId = `dialog-title-${dialogCounter}`;
   const bodyId = `dialog-body-${dialogCounter}`;
-  const trigger =
-    document.activeElement instanceof HTMLElement ? document.activeElement : null;
   const dialog = el('dialog', `dialog dialog--${options.variant}`);
   dialog.setAttribute('aria-labelledby', titleId);
   if (options.body) dialog.setAttribute('aria-describedby', bodyId);
@@ -102,8 +101,14 @@ export function openDialog(options: DialogOptions): DialogHandle {
     dialog.remove();
     // Native <dialog> restores focus only while it remains connected; screens
     // replace their whole subtree, so restore the invoking control explicitly.
-    if (trigger && trigger.isConnected && !trigger.closest('dialog')) {
-      trigger.focus({ preventScroll: true });
+    // Ribbons are SVG elements, so the fallback must cover them too.
+    if (
+      (previouslyFocused instanceof HTMLElement ||
+        previouslyFocused instanceof SVGElement) &&
+      previouslyFocused.isConnected &&
+      !previouslyFocused.closest('dialog')
+    ) {
+      previouslyFocused.focus({ preventScroll: true });
     }
   };
 

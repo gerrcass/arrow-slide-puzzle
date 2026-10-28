@@ -8,7 +8,6 @@ import { el, svgEl } from './dom';
 import { revealDuration, revealHoleFor } from './reveal';
 
 export interface BoardViewOptions {
-  readonly seed: number;
   readonly accent?: RibbonColor;
   readonly describedBy?: string;
   readonly constellation?: Constellation | undefined;
@@ -49,7 +48,6 @@ export class BoardView {
     this.onActivate = options.onActivate;
     this.assistive = options.assistive ?? false;
     const art = createBoardArt(board, {
-      seed: options.seed,
       interactive: true,
       accent: options.accent ?? 'rose',
       className: 'board-svg--play',
@@ -91,6 +89,7 @@ export class BoardView {
         (event) => {
           if (event.key !== 'Enter' && event.key !== ' ') return;
           event.preventDefault();
+          if (event.repeat || event.isComposing) return;
           if (!this.locked) this.onActivate(id);
         },
         { signal: this.abort.signal },

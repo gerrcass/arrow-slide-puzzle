@@ -86,7 +86,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
           : `Motion set to ${option.value}.`,
       );
     });
-    label.append(input, document.createTextNode(option.label));
+    label.append(input, el('span', 'settings-choice__label', option.label));
     fieldset.append(label);
   }
   motionSection.append(fieldset);
@@ -132,7 +132,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
         option.value === 'nana' ? 'Nana Pearl’s full voice.' : 'Brief guide copy.',
       );
     });
-    label.append(input, document.createTextNode(option.label));
+    label.append(input, el('span', 'settings-choice__label', option.label));
     voiceFieldset.append(label);
   }
   guideSection.append(voiceFieldset);
@@ -188,8 +188,10 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
   const resetNote = el(
     'p',
     'settings-note',
-    'Reset erases best stars, unlocks, and tutorial flags on this device.',
+    'Reset erases best stars, unlocks, and tutorial progress. Your sound, motion, and access preferences stay.',
   );
+  resetNote.setAttribute('role', 'status');
+  resetNote.setAttribute('aria-live', 'polite');
   const reset = el('button', 'btn btn--danger');
   reset.type = 'button';
   reset.textContent = 'Reset progress';
@@ -202,7 +204,8 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
       armed = true;
       reset.textContent = 'Tap again to erase';
       reset.classList.add('is-armed');
-      resetNote.textContent = 'This cannot be undone. Tap once more to reset everything.';
+      resetNote.textContent =
+        'This cannot be undone. Tap once more to reset campaign progress. Your preferences stay.';
       if (disarmTimer !== null) window.clearTimeout(disarmTimer);
       disarmTimer = window.setTimeout(() => {
         if (!reset.isConnected) return;
@@ -210,7 +213,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
         reset.textContent = 'Reset progress';
         reset.classList.remove('is-armed');
         resetNote.textContent =
-          'Reset erases best stars, unlocks, and tutorial flags on this device.';
+          'Reset erases best stars, unlocks, and tutorial progress. Your sound, motion, and access preferences stay.';
       }, 5000);
       return;
     }

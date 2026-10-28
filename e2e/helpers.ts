@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs';
 import type { Page } from '@playwright/test';
 import { defaultSave, SAVE_KEY, type SaveData } from '../src/app/progress';
 
@@ -7,6 +8,7 @@ export interface SeedOptions {
   readonly sound?: boolean;
   readonly tips?: boolean;
   readonly motion?: SaveData['settings']['motion'];
+  readonly introSeen?: boolean;
   readonly tutorialDone?: boolean;
   readonly collisionTipSeen?: boolean;
   readonly lastPlayed?: number | null;
@@ -26,7 +28,7 @@ export function makeSave(options: SeedOptions = {}): SaveData {
     },
     tutorial: {
       ...base.tutorial,
-      introSeen: options.tutorialDone ?? true,
+      introSeen: options.introSeen ?? options.tutorialDone ?? true,
       tutorialDone: options.tutorialDone ?? true,
       collisionTipSeen: options.collisionTipSeen ?? options.tutorialDone ?? true,
       heartsTipSeen: options.tutorialDone ?? true,
@@ -57,6 +59,12 @@ export async function seedSave(page: Page, options: SeedOptions = {}): Promise<v
     },
     { key: SAVE_KEY, value: JSON.stringify(save) },
   );
+}
+
+/** Test evidence belongs in the gitignored test-results tree, not docs. */
+export async function shot(page: Page, name: string): Promise<void> {
+  mkdirSync('test-results/evidence', { recursive: true });
+  await page.screenshot({ path: `test-results/evidence/${name}` });
 }
 
 export async function noHorizontalOverflow(page: Page): Promise<boolean> {

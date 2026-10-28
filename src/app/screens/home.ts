@@ -133,7 +133,6 @@ export function homeScreen(context: AppContext): Screen {
   const tilt = el('div', 'home-preview__tilt');
   if (previewLevel) {
     const art = createBoardArt(previewLevel.board, {
-      seed: previewLevel.seed,
       accent: chapterFor(previewLevel.index).accent,
       className: 'board-art--preview',
     });

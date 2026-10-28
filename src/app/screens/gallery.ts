@@ -1,3 +1,4 @@
+import { constellationHint } from '../../content/constellations';
 import { LEVELS } from '../../content/levels';
 import type { AppContext, Screen } from '../context';
 import { collectedCardCount, galleryCards, type GalleryCard } from '../gallery';
@@ -8,7 +9,7 @@ import { createStarRow } from '../ui/stars';
 
 function cardLabel(card: GalleryCard, name: string): string {
   if (!card.collected) {
-    return `Level ${card.levelNumber}. A hidden constellation. Locked. Complete tangle ${card.levelNumber} to collect it.`;
+    return `Level ${card.levelNumber}. A hidden constellation. Hint: ${constellationHint(card.constellation?.id ?? '')}. Complete tangle ${card.levelNumber} to collect it.`;
   }
   const stars =
     card.bestStars === 1 ? '1 star' : `${card.bestStars} stars`;
@@ -127,7 +128,7 @@ export function galleryScreen(context: AppContext): Screen {
       'gallery-card__caption',
       card.collected
         ? card.constellation?.caption ?? ''
-        : `Clear tangle ${String(card.levelNumber).padStart(2, '0')} to uncover it.`,
+        : `${constellationHint(card.constellation?.id ?? '')} · Clear tangle ${String(card.levelNumber).padStart(2, '0')} to uncover it.`,
     );
 
     const footer = el('span', 'gallery-card__footer');

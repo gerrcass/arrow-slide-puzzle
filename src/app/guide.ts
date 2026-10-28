@@ -1,9 +1,8 @@
 import type { GuideVoice, TutorialFlag, TutorialFlags } from './progress';
 
-export const GUIDE_NAME = 'Nana Pearl';
 export type GuideExpression = 'neutral' | 'warm' | 'concerned' | 'delighted';
 export type GuideBeat = 1 | 2 | 3;
-export type GuideBubbleKind = 'tutorial' | 'collision' | 'win' | 'loss';
+export type GuideBubbleKind = 'tutorial' | 'collision' | 'win' | 'loss' | 'hint';
 
 export interface GuideBubble {
   readonly kind: GuideBubbleKind;
@@ -43,14 +42,14 @@ const WELCOME: Readonly<Record<GuideVoice, Overview>> = {
     body:
       'Tap a ribbon when its whole path is clear — it will slide right off the board. If something is in the way, it bumps and costs one of your three hearts. There is no clock. Ready for a look?',
     showLabel: 'Show me',
-    skipLabel: 'Skip for now',
+    skipLabel: 'Skip tutorial',
   },
   brief: {
     title: 'Oh, hello dear',
     body:
       'Tap a ribbon only when its whole path is clear. A bump costs one of three hearts. There is no clock. Ready for a look?',
     showLabel: 'Show me',
-    skipLabel: 'Skip for now',
+    skipLabel: 'Skip tutorial',
   },
 };
 
@@ -83,6 +82,10 @@ const TIP_COPY: Readonly<Record<Exclude<GuideBubbleKind, 'tutorial'>, CopyPair>>
   loss: {
     nana: 'No harm done. The ribbons will be here when you feel like looking again.',
     brief: 'No harm done. Come back when you are ready.',
+  },
+  hint: {
+    nana: 'A little nudge, dear. The ribbon I lit up can truly leave — follow its whole path before you tap.',
+    brief: 'A little nudge. The lit ribbon can truly leave.',
   },
 };
 
@@ -221,6 +224,22 @@ export function guideOnCollision(
       beat: tutorialActive ? 3 : null,
       expression: 'concerned',
     },
+  };
+}
+
+export function guideOnHint(state: GuideState): GuideState {
+  if (
+    !state.tipsEnabled ||
+    state.introOpen ||
+    !state.flags.tutorialDone ||
+    state.flags.hintTipSeen
+  ) {
+    return state;
+  }
+  return {
+    ...withFlags(state, { hintTipSeen: true }),
+    beat: 3,
+    bubble: { kind: 'hint', beat: null, expression: 'warm' },
   };
 }
 

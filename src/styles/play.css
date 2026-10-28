@@ -178,7 +178,11 @@
   align-items: flex-end;
   justify-content: center;
   width: 100%;
-  min-height: 0;
+  /*
+   * Reserve the bubble's room whether or not Nana is speaking. The board keeps
+   * its position when a tip appears, so a clear never moves the next target.
+   */
+  min-height: 7.5rem;
   padding-bottom: max(0.1rem, env(safe-area-inset-bottom));
 }
 
@@ -188,9 +192,8 @@
 
 /*
  * On a laptop the guide sits below the board, so a full-height board plus a
- * bubble can push the footer out of the viewport. When a guide moment is
- * present, reserve 23rem for the header, status, footer, gaps, and bubble.
- * Without one, the board gets the taller budget and the screen stays calm.
+ * bubble can push the footer out of the viewport. Reserve 23rem for the header,
+ * status, footer, gaps, and bubble on every desktop play screen.
  */
 @media (min-width: 800px) {
   .play-screen {
@@ -199,19 +202,134 @@
     overflow: hidden;
   }
 
-  .play-screen:has(.guide-moment) .board-frame {
+  .play-screen .board-frame {
     width: min(100%, 37.5rem, calc(100dvh - 23rem));
   }
 }
 
 @media (min-width: 980px) {
-  .guide-slot {
-    min-height: 0;
-  }
-
   .guide-slot .guide-moment__portrait {
     width: 3.6rem;
     margin-top: 0.15rem;
+  }
+}
+
+/* Short phones: keep the board, guide, and footer in one viewport. */
+@media (max-height: 640px) and (orientation: portrait) {
+  .guide-slot {
+    min-height: 5.5rem;
+  }
+
+  .guide-slot .guide-moment__portrait {
+    width: 2.5rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .guide-slot .guide-bubble {
+    padding: 0.4rem 0.5rem 0.45rem 0.6rem;
+    border-radius: 0.8rem 0.95rem 0.95rem 0.95rem;
+  }
+
+  .guide-slot .guide-bubble__head {
+    display: none;
+  }
+
+  .guide-slot .guide-bubble__dismiss {
+    position: absolute;
+    top: -0.55rem;
+    right: -0.55rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: 2.75rem;
+    margin: 0;
+  }
+
+  .guide-slot .guide-bubble__text {
+    padding-right: 1.4rem;
+    font-size: 0.76rem;
+    line-height: 1.36;
+  }
+}
+
+/*
+ * Landscape phones: a side-by-side board and control rail uses the width
+ * instead of collapsing the board to the viewport height. The board stays
+ * square and the footer remains in the rail.
+ */
+@media (orientation: landscape) and (max-height: 620px) {
+  .play-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.95fr);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "stage header"
+      "stage status"
+      "stage guide"
+      "stage footer";
+    align-items: start;
+    column-gap: 1rem;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+    padding-block: 0.6rem;
+  }
+
+  .play-header {
+    grid-area: header;
+  }
+
+  .play-chapter-index,
+  .play-tangle-pill {
+    display: none;
+  }
+
+  .play-title {
+    font-size: 1.28rem;
+  }
+
+  .play-status {
+    grid-area: status;
+  }
+
+  .play-body {
+    display: contents;
+  }
+
+  .board-stage {
+    grid-area: stage;
+    align-self: center;
+    padding: 0;
+  }
+
+  .guide-slot {
+    grid-area: guide;
+    min-height: 0;
+    align-items: flex-end;
+  }
+
+  .play-footer {
+    grid-area: footer;
+    align-items: flex-start;
+    padding-bottom: 0;
+  }
+
+  .play-screen .board-frame {
+    width: min(100%, calc(100dvh - 1.5rem), 37.5rem);
+  }
+
+  .guide-slot .guide-bubble__head,
+  .play-footer .key-hint {
+    display: none;
+  }
+
+  .guide-slot .guide-bubble__text {
+    font-size: 0.76rem;
+    line-height: 1.36;
+  }
+
+  .skip-link,
+  .play-instructions {
+    position: absolute;
   }
 }
 

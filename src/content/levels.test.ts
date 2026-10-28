@@ -4,7 +4,11 @@ import { computeMetrics } from '../engine/metrics';
 import { solveBoard, verifyRemovalOrder } from '../engine/solver';
 import { CHAPTER_GENERATION } from '../generator/config';
 import { generateBoard } from '../generator/generate';
-import { CONSTELLATIONS, constellationById } from './constellations';
+import {
+  CONSTELLATIONS,
+  constellationById,
+  constellationHint,
+} from './constellations';
 import { LEVELS } from './levels';
 import { metricsMatch } from './levelBuilder';
 import { CHAPTERS, chapterById } from './schema';
@@ -61,6 +65,18 @@ describe('campaign shape', () => {
       }
     }
     expect(motifs.size).toBe(12);
+  });
+
+  it('gives every locked constellation a distinct, non-spoiling hint', () => {
+    const hints = new Set<string>();
+    for (const constellation of CONSTELLATIONS) {
+      const hint = constellationHint(constellation.id);
+      expect(hint.length).toBeGreaterThan(4);
+      expect(hint).not.toBe(constellation.name);
+      expect(hint.toLowerCase()).not.toContain(constellation.name.toLowerCase());
+      hints.add(hint);
+    }
+    expect(hints.size).toBe(12);
   });
 });
 

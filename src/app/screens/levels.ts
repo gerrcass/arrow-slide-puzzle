@@ -1,4 +1,5 @@
 import { constellationById } from '../../content/constellations';
+import { constellationHint } from '../../content/constellations';
 import { LEVELS } from '../../content/levels';
 import { CHAPTERS, chapterFor } from '../../content/schema';
 import type { AppContext, Screen } from '../context';
@@ -11,23 +12,27 @@ function levelAriaLabel(
   index: number,
   title: string,
   constellationName: string | null,
+  hint: string,
   best: number,
   unlocked: boolean,
+  completed: boolean,
   isNext: boolean,
 ): string {
   const chapter = chapterFor(index);
   const number = String(index + 1).padStart(2, '0');
-  const state = !unlocked ? 'Locked' : best > 0 ? 'Replay' : isNext ? 'Next' : 'Play';
-  const constellation = unlocked
-    ? constellationName ?? 'A constellation'
-    : 'A hidden constellation';
+  const state = !unlocked ? 'Locked' : completed ? 'Replay' : isNext ? 'Next' : 'Play';
+  const constellation = !unlocked
+    ? 'A hidden constellation'
+    : completed
+      ? constellationName ?? 'A constellation'
+      : hint;
   // WCAG 2.5.3: the visible words must appear, in order, inside the name.
   const visible = `${number} ${state} ${title} ${constellation}`;
   const prefix = `Level ${index + 1}, chapter ${chapter.numeral} ${chapter.title}.`;
   if (!unlocked) {
     return `${prefix} ${visible}. Complete level ${index} to open it.`;
   }
-  if (best > 0) {
+  if (completed) {
     return `${prefix} ${visible}. Completed. Best ${best} of 3 stars. Replay.`;
   }
   return `${prefix} ${visible}. ${isNext ? 'Next tangle. ' : ''}Play.`;
@@ -151,8 +156,10 @@ export function levelsScreen(context: AppContext, notice: string | null): Screen
           level.index,
           level.title,
           unlocked ? constellation?.name ?? null : null,
+          constellationHint(constellation?.id ?? ''),
           best,
           unlocked,
+          completed,
           isNext,
         ),
       );
@@ -176,7 +183,14 @@ export function levelsScreen(context: AppContext, notice: string | null): Screen
       const art = el('span', 'level-card__art');
       art.setAttribute('aria-hidden', 'true');
       if (unlocked && constellation) {
-        art.append(createConstellationArt(constellation, { className: 'constellation--card' }));
+        art.append(
+          createConstellationArt(constellation, {
+            className: completed
+              ? 'constellation--card'
+              : 'constellation--card constellation--veiled',
+            muted: !completed,
+          }),
+        );
       } else {
         const lock = el('span', 'level-card__lock');
         lock.append(createIcon('lock'));
@@ -187,9 +201,11 @@ export function levelsScreen(context: AppContext, notice: string | null): Screen
       const constellationName = el(
         'span',
         'level-card__constellation',
-        unlocked
-          ? constellation?.name ?? 'A constellation'
-          : 'A hidden constellation',
+        !unlocked
+          ? 'A hidden constellation'
+          : completed
+            ? constellation?.name ?? 'A constellation'
+            : constellationHint(constellation?.id ?? ''),
       );
       const stars = createStarRow(best, 3, {
         label: `Best ${best} of 3 stars`,

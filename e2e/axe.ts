@@ -40,7 +40,7 @@ export async function seriousAxeViolations(page: Page): Promise<readonly AxeViol
     return scoped.axe.run(document, {
       runOnly: {
         type: 'tag',
-        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'],
+        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'],
       },
       resultTypes: ['violations'],
     });

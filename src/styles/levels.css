@@ -339,6 +339,11 @@
   color: var(--chapter-accent);
 }
 
+.constellation.constellation--veiled {
+  filter: saturate(0.32) brightness(0.62) blur(0.6px);
+  opacity: 0.78;
+}
+
 .constellation.constellation--card {
   width: 4.5rem;
   height: 4.5rem;

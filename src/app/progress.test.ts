@@ -144,14 +144,36 @@ describe('saved progress store', () => {
     expect(reloaded.isUnlocked(2)).toBe(false);
   });
 
-  it('resets to a clean save', () => {
+  it('resets campaign progress and keeps stored preferences', () => {
     const { store } = storeWith();
     store.recordCompletion(0, 3, FIRST);
     store.setSettings({ sound: false });
     store.reset();
     expect(store.bestStars(0)).toBe(0);
-    expect(store.data.settings.sound).toBe(true);
+    expect(store.data.settings.sound).toBe(false);
     expect(store.isUnlocked(1)).toBe(false);
+  });
+
+  it('preserves accessibility and guide preferences when resetting progress', () => {
+    const { store } = storeWith();
+    store.setSettings({
+      sound: false,
+      motion: 'reduced',
+      assistive: true,
+      tips: false,
+      guideVoice: 'brief',
+    });
+    store.recordCompletion(0, 3, FIRST);
+    store.reset();
+
+    expect(store.bestStars(0)).toBe(0);
+    expect(store.data.settings).toMatchObject({
+      sound: false,
+      motion: 'reduced',
+      assistive: true,
+      tips: false,
+      guideVoice: 'brief',
+    });
   });
 
   it('replays the tutorial without erasing stars', () => {

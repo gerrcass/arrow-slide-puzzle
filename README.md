@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://gerrcass.github.io/arrow-slide-puzzle/"><img alt="Play the game" src="https://img.shields.io/badge/%E2%96%B6%20play-online-ffd27a?style=for-the-badge&labelColor=1b0b37" /></a>
   <img alt="No runtime dependencies" src="https://img.shields.io/badge/runtime%20deps-0-9ff0cf?style=for-the-badge&labelColor=1b0b37" />
-  <img alt="Tests" src="https://img.shields.io/badge/unit%20%2B%20browser-140%2B%20green-9fd8ff?style=for-the-badge&labelColor=1b0b37" />
+  <img alt="Tests" src="https://img.shields.io/badge/unit%20%2B%20browser-150%2B%20green-9fd8ff?style=for-the-badge&labelColor=1b0b37" />
 </p>
 
 ![Home, a tangle in progress, and the constellation gallery](docs/screenshots/hero.png)
@@ -61,7 +61,7 @@ The game is visual by nature, so accessibility is designed in rather than claime
 - Live regions announce clears, collisions, hearts, hints, wins, and gallery unlocks.
 - Dialogs trap and restore focus; the skip link goes straight to the board.
 - `prefers-reduced-motion` is honoured, with an in-app override.
-- Colour is never the only signal, text meets WCAG AA, and controls meet 44 px targets. The one documented exception is the densest 8×8 board at 320 px, where ribbon targets are 26.7 px — above the WCAG 2.2 AA 24 px minimum, with keyboard and assistive alternatives. The measurements live in [`docs/accessibility.md`](docs/accessibility.md).
+- Colour is never the only signal, text meets WCAG AA, and every button control is at least 44 × 44 px. Ribbon hit areas cover the whole ribbon plus a one-cell halo: **50 / 44 / 39 px** on 6×6 / 7×7 / 8×8 at 390 px, and **34 / 30 / 26 px** at 320 px. All clear the WCAG 2.2 AA 24 px minimum; the densest boards also offer the full ribbon length, keyboard play, and assistive mode. Measurements and the deliberate halo cap live in [`docs/accessibility.md`](docs/accessibility.md).
 
 ## Development
 
@@ -104,7 +104,7 @@ The rules engine has no DOM, storage, clock, or randomness. The renderer animate
 
 The site uses relative asset paths and hash routing, so it works from the `/arrow-slide-puzzle/` project subpath with no server rewrites. A small service worker precaches the shell and hashed assets; the offline path is covered by an end-to-end test.
 
-Local production Lighthouse (mobile): **100 performance, 100 accessibility, 100 best practices, 100 SEO**, LCP 0.8 s, CLS 0. See [`docs/evidence/lighthouse.md`](docs/evidence/lighthouse.md).
+Local production Lighthouse (mobile): **100 performance, 100 accessibility, 100 best practices, 100 SEO**, LCP 0.8 s, CLS 0, re-run after the final layout pass. See [`docs/evidence/lighthouse.md`](docs/evidence/lighthouse.md).
 
 ## Credits
 

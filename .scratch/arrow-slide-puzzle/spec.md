@@ -1,6 +1,6 @@
 # Spec — Nana Pearl's Arrow Slide Puzzle
 
-**Status:** ready-for-agent
+**Status:** implemented
 **Source:** `.scratch/arrow-slide-puzzle/GRILL.md`
 **Domain vocabulary:** `GLOSSARY.md`
 **Decisions:** `docs/adr/0001`–`0008`

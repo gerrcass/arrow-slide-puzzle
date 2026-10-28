@@ -21,6 +21,7 @@ export class App {
   private readonly progress: ProgressStore;
   private readonly politeRegion: HTMLElement;
   private readonly assertiveRegion: HTMLElement;
+  private readonly guideRegion: HTMLElement;
   private readonly context: AppContext;
   private readonly mediaQuery: MediaQueryList | null;
   private readonly audio: ReturnType<typeof createAudioEngine>;
@@ -28,6 +29,7 @@ export class App {
   private settingsDialog: DialogHandle | null = null;
   private politeTimer: number | null = null;
   private assertiveTimer: number | null = null;
+  private guideTimer: number | null = null;
 
   constructor(root: HTMLElement, progress: ProgressStore) {
     this.root = root;
@@ -43,20 +45,29 @@ export class App {
     }
     ambient.append(el('div', 'ambient__stars'));
 
-    this.politeRegion = el('div', 'live-region');
+    this.politeRegion = el('div', 'live-region live-region--game');
     this.politeRegion.setAttribute('aria-live', 'polite');
     this.politeRegion.setAttribute('aria-atomic', 'true');
     this.assertiveRegion = el('div', 'live-region');
     this.assertiveRegion.setAttribute('aria-live', 'assertive');
     this.assertiveRegion.setAttribute('aria-atomic', 'true');
+    this.guideRegion = el('div', 'live-region live-region--guide');
+    this.guideRegion.setAttribute('aria-live', 'polite');
+    this.guideRegion.setAttribute('aria-atomic', 'true');
 
-    this.root.append(ambient, this.politeRegion, this.assertiveRegion);
+    this.root.append(
+      ambient,
+      this.politeRegion,
+      this.assertiveRegion,
+      this.guideRegion,
+    );
 
     this.context = {
       progress: this.progress,
       audio: this.audio,
       navigate: (hash) => this.navigate(hash),
       announce: (message, priority = 'polite') => this.announce(message, priority),
+      announceGuide: (message) => this.announceGuide(message),
       setSound: (enabled) => this.setSound(enabled),
       openSettings: () => this.openSettings(),
       isReducedMotion: () =>
@@ -106,6 +117,14 @@ export class App {
       if (this.politeTimer !== null) window.clearTimeout(this.politeTimer);
       this.politeTimer = timer;
     }
+  }
+
+  announceGuide(message: string): void {
+    this.guideRegion.textContent = '';
+    if (this.guideTimer !== null) window.clearTimeout(this.guideTimer);
+    this.guideTimer = window.setTimeout(() => {
+      this.guideRegion.textContent = message;
+    }, 24);
   }
 
   setSound(enabled: boolean): void {
@@ -176,7 +195,10 @@ export class App {
     this.currentScreen?.element.remove();
     this.currentScreen = screen;
     this.root.append(screen.element);
-    const heading = screen.element.querySelector<HTMLElement>('[data-screen-heading]');
-    heading?.focus({ preventScroll: true });
+    // Focus the screen itself, not the heading. The heading sits after the skip
+    // link and Back button in DOM order; focusing it made those controls
+    // unreachable by Tab. The screen is labelled by its own heading content.
+    screen.element.tabIndex = -1;
+    screen.element.focus({ preventScroll: true });
   }
 }
