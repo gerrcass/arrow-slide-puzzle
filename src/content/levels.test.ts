@@ -33,6 +33,28 @@ describe('campaign shape', () => {
     }
     expect(new Set(LEVELS.map((level) => level.constellationId)).size).toBe(12);
   });
+
+  it('has usable original constellation art and copy', () => {
+    for (const constellation of CONSTELLATIONS) {
+      expect(constellation.name.trim().length).toBeGreaterThan(0);
+      expect(constellation.caption.trim().length).toBeGreaterThan(0);
+      expect(constellation.stars.length).toBeGreaterThanOrEqual(4);
+      for (const star of constellation.stars) {
+        expect(star.x).toBeGreaterThanOrEqual(0);
+        expect(star.x).toBeLessThanOrEqual(1);
+        expect(star.y).toBeGreaterThanOrEqual(0);
+        expect(star.y).toBeLessThanOrEqual(1);
+        expect(star.size).toBeGreaterThan(0);
+      }
+      for (const [from, to] of constellation.lines) {
+        expect(from).toBeGreaterThanOrEqual(0);
+        expect(to).toBeGreaterThanOrEqual(0);
+        expect(from).toBeLessThan(constellation.stars.length);
+        expect(to).toBeLessThan(constellation.stars.length);
+        expect(from).not.toBe(to);
+      }
+    }
+  });
 });
 
 describe('committed level content', () => {
