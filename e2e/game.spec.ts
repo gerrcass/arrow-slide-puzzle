@@ -327,6 +327,11 @@ test.describe('play', () => {
     }
     const dialog = page.getByRole('dialog');
     await expect(dialog.getByRole('heading', { name: 'Out of hearts' })).toBeVisible();
+    const lossViolations = await seriousAxeViolations(page);
+    expect(
+      lossViolations,
+      lossViolations.map((v) => `${v.id}: ${v.targets.join(', ')}`).join('; '),
+    ).toEqual([]);
     await dialog.getByRole('button', { name: 'Try again' }).click();
     await expect(page.locator('.heart-row')).toHaveAttribute(
       'aria-label',
