@@ -1,0 +1,263 @@
+.play-screen {
+  gap: clamp(0.6rem, 1.8vh, 1.1rem);
+}
+
+.play-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.play-heading {
+  min-width: 0;
+}
+
+.play-heading .eyebrow {
+  font-size: 0.64rem;
+  letter-spacing: 0.15em;
+}
+
+.play-title {
+  overflow: hidden;
+  font-size: clamp(1.2rem, 2.2vw, 1.55rem);
+  font-weight: 850;
+  letter-spacing: -0.025em;
+  line-height: 1.18;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.play-tangle-pill {
+  justify-self: end;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.play-back {
+  color: var(--color-text);
+}
+
+.play-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 1rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: rgba(255, 245, 255, 0.035);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.heart-row {
+  display: flex;
+  align-items: center;
+  gap: 0.16rem;
+  color: var(--color-heart);
+}
+
+.heart-slot {
+  display: inline-flex;
+  filter: drop-shadow(0 0 0.5rem rgba(255, 127, 168, 0.32));
+  transition:
+    color var(--duration-medium) ease,
+    opacity var(--duration-medium) ease,
+    transform var(--duration-medium) var(--ease-out);
+}
+
+.heart-slot .icon {
+  width: 1.28rem;
+  height: 1.28rem;
+}
+
+.heart-slot.is-empty {
+  color: rgba(255, 207, 223, 0.24);
+  filter: none;
+}
+
+.heart-slot.is-empty .icon path {
+  fill: transparent;
+  stroke: currentColor;
+  stroke-width: 1.45;
+}
+
+.heart-row.is-breaking .heart-slot.is-empty {
+  animation: heart-break 600ms var(--ease-out);
+}
+
+.progress-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.73rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.progress-pill__label {
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-track {
+  width: 6rem;
+  height: 0.36rem;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 245, 255, 0.09);
+}
+
+.progress-track__fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-gold), var(--color-mint));
+  box-shadow: 0 0 0.6rem rgba(255, 210, 122, 0.28);
+  transition: width 460ms var(--ease-out);
+}
+
+.constellation-pill {
+  border-color: rgba(255, 210, 122, 0.2);
+  background: rgba(255, 210, 122, 0.07);
+  color: var(--color-gold-soft);
+}
+
+.board-stage {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  min-height: 0;
+  padding-block: clamp(0.15rem, 1.2vh, 0.6rem);
+}
+
+.play-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: max(0.15rem, env(safe-area-inset-bottom));
+}
+
+.play-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.play-actions .btn {
+  min-width: 6.6rem;
+}
+
+.key-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+}
+
+.key {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.35rem;
+  min-height: 1.25rem;
+  padding: 0 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.3rem;
+  background: rgba(255, 245, 255, 0.055);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.64rem;
+  font-weight: 800;
+}
+
+.key-hint__dot {
+  color: var(--color-gold);
+}
+
+@keyframes heart-break {
+  0% {
+    transform: scale(1);
+  }
+  24% {
+    transform: scale(1.35) rotate(-8deg);
+  }
+  52% {
+    transform: scale(0.82) translateY(0.18rem);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 520px) {
+  .play-tangle-pill {
+    display: none;
+  }
+
+  .play-header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .play-status {
+    gap: 0.5rem 0.7rem;
+  }
+
+  .constellation-pill {
+    display: none;
+  }
+
+  .progress-pill {
+    gap: 0.4rem;
+  }
+
+  .progress-track {
+    width: 4.4rem;
+  }
+
+  .key-hint {
+    display: none;
+  }
+
+  .play-actions .btn {
+    min-width: 6rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .play-heading .eyebrow {
+    font-size: 0.58rem;
+  }
+
+  .play-title {
+    font-size: 1.08rem;
+  }
+
+  .heart-slot .icon {
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  .progress-pill {
+    font-size: 0.67rem;
+  }
+
+  .progress-track {
+    width: 3.4rem;
+  }
+
+  .play-actions {
+    gap: 0.4rem;
+  }
+
+  .play-actions .btn {
+    min-width: 5.5rem;
+    padding-inline: 0.9rem;
+  }
+}
