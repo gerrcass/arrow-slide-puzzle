@@ -30,6 +30,7 @@ export class App {
   private politeTimer: number | null = null;
   private assertiveTimer: number | null = null;
   private guideTimer: number | null = null;
+  private screenCounter = 0;
 
   constructor(root: HTMLElement, progress: ProgressStore) {
     this.root = root;
@@ -197,7 +198,14 @@ export class App {
     this.root.append(screen.element);
     // Focus the screen itself, not the heading. The heading sits after the skip
     // link and Back button in DOM order; focusing it made those controls
-    // unreachable by Tab. The screen is labelled by its own heading content.
+    // unreachable by Tab. Labelling the main region by its heading keeps the
+    // screen announcement meaningful without stealing the tab order.
+    const heading = screen.element.querySelector<HTMLElement>('[data-screen-heading]');
+    if (heading) {
+      this.screenCounter += 1;
+      if (!heading.id) heading.id = `screen-heading-${this.screenCounter}`;
+      screen.element.setAttribute('aria-labelledby', heading.id);
+    }
     screen.element.tabIndex = -1;
     screen.element.focus({ preventScroll: true });
   }

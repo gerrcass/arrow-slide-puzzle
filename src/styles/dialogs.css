@@ -749,7 +749,7 @@
 
   .dialog--win .dialog-actions .btn,
   .dialog--campaign .dialog-actions .btn {
-    min-height: 2.5rem;
+    min-height: 2.75rem;
   }
 
   .star-burst--win {
