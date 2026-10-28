@@ -1,0 +1,13 @@
+{
+  "spec": 1,
+  "tickets": {
+    "01-playable-core-loop": 2,
+    "02-twelve-curated-levels": 3,
+    "03-level-select-stars-progress": 4,
+    "04-constellation-reveal-gallery": 5,
+    "05-nana-pearl-guide": 6,
+    "06-feel-sound-settings-motion": 7,
+    "07-accessibility-keyboard-screen-reader": 8,
+    "08-ship-pwa-ci-pages-readme": 9
+  }
+}

@@ -1,0 +1,89 @@
+:root {
+  color-scheme: dark;
+
+  /* Typography */
+  --font-display: "Fredoka", "Fredoka Fallback", ui-rounded, "SF Pro Rounded",
+    "Nunito", "Quicksand", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: ui-rounded, "SF Pro Rounded", "Nunito", "Quicksand",
+    "Trebuchet MS", system-ui, sans-serif;
+
+  /* Night palette */
+  --color-night: #07030f;
+  --color-night-soft: #0d061b;
+  --color-surface: #150b2b;
+  --color-surface-raised: #1c1037;
+  --color-surface-bright: #271747;
+  --color-veil: rgba(255, 245, 255, 0.055);
+  --color-veil-strong: rgba(255, 245, 255, 0.1);
+  --color-border: rgba(215, 190, 255, 0.14);
+  --color-border-strong: rgba(228, 207, 255, 0.28);
+
+  /* Ink */
+  --color-text: #fbf5ff;
+  --color-text-muted: #cbb9e3;
+  --color-text-dim: #9e89bb;
+  --color-ink-dark: #160a2b;
+  --color-cream: #fff6e3;
+  --color-cream-deep: #f1e0bf;
+  --color-plum: #2a133f;
+
+  /* Accents */
+  --color-gold: #ffd27a;
+  --color-gold-strong: #ffbf4d;
+  --color-gold-soft: #ffe8b8;
+  --color-rose: #ff9fc4;
+  --color-heart: #ff7fa8;
+  --color-mint: #9ff0cf;
+  --color-aqua: #9ff0cf;
+  --color-sky: #9fd8ff;
+  --color-lilac: #c8a7ff;
+  --color-focus: #fff0b8;
+  --color-danger: #ff8fa3;
+  --color-success: #a8f0cf;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  /* Radii */
+  --radius-xs: 0.5rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.35rem;
+  --radius-xl: 1.75rem;
+  --radius-pill: 999px;
+
+  /* Elevation */
+  --shadow-soft: 0 1.25rem 3rem rgba(2, 0, 8, 0.34);
+  --shadow-deep: 0 2rem 5rem rgba(2, 0, 8, 0.55);
+  --shadow-gold: 0 0.6rem 1.8rem rgba(255, 191, 77, 0.22);
+  --shadow-heart: 0 0 0.9rem rgba(255, 127, 168, 0.34);
+
+  /* Type scale */
+  --text-xs: 0.72rem;
+  --text-sm: 0.84rem;
+  --text-md: 0.98rem;
+  --text-lg: 1.12rem;
+  --text-xl: clamp(1.35rem, 2.2vw, 1.7rem);
+  --text-2xl: clamp(1.7rem, 3vw, 2.3rem);
+  --text-display: clamp(2.7rem, 6.4vw, 5.4rem);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 140ms;
+  --duration-medium: 320ms;
+  --duration-slow: 620ms;
+
+  /* Layering */
+  --z-screen: 1;
+  --z-dialog: 20;
+  --z-live: 40;
+}

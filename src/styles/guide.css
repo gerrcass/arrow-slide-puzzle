@@ -1,0 +1,156 @@
+.nana-portrait {
+  display: block;
+  width: 4.2rem;
+  height: auto;
+  flex: none;
+  filter: drop-shadow(0 0.45rem 0.8rem rgba(2, 0, 8, 0.36));
+}
+
+.nana-portrait--welcome {
+  width: 5.8rem;
+  margin: 0 auto var(--space-3);
+}
+
+.guide-moment {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.55rem;
+  width: 100%;
+  max-width: 40rem;
+  min-width: 0;
+}
+
+.guide-moment__portrait {
+  margin-bottom: 0.2rem;
+}
+
+.guide-bubble {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.6rem 0.6rem 0.8rem;
+  border: 1px solid rgba(78, 48, 30, 0.16);
+  border-radius: 0.95rem 1.15rem 1.15rem 1.15rem;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.55), transparent 46%),
+    var(--color-cream);
+  color: var(--color-plum);
+  box-shadow:
+    0 0.7rem 1.8rem rgba(2, 0, 8, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.guide-bubble::before {
+  content: "";
+  position: absolute;
+  top: 1.05rem;
+  left: -0.38rem;
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 0.1rem 0 0.1rem 0.1rem;
+  background: var(--color-cream);
+  box-shadow: -1px 1px 0 rgba(78, 48, 30, 0.08);
+  transform: rotate(45deg);
+}
+
+.guide-bubble__head {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding-right: 2.5rem;
+}
+
+.guide-bubble__name {
+  color: var(--color-plum);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  opacity: 0.66;
+  white-space: nowrap;
+}
+
+.guide-bubble__rule {
+  color: var(--color-plum);
+  font-size: 0.7rem;
+  opacity: 0.36;
+}
+
+.guide-bubble__dismiss {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.15rem;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 2.75rem;
+  margin: 0;
+  z-index: 1;
+  border-radius: 50%;
+  color: rgba(42, 19, 63, 0.58);
+  transition:
+    color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
+}
+
+.guide-bubble__dismiss:hover {
+  background: rgba(42, 19, 63, 0.08);
+  color: var(--color-plum);
+}
+
+.guide-bubble__dismiss .icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.guide-bubble__text {
+  margin-top: -0.15rem;
+  font-size: 0.83rem;
+  line-height: 1.48;
+  text-wrap: pretty;
+}
+
+.guide-moment--dialog {
+  margin-top: var(--space-3);
+  padding: 0.15rem;
+  text-align: left;
+}
+
+.guide-moment--dialog .nana-portrait {
+  width: 3.25rem;
+}
+
+.guide-moment--dialog .guide-bubble {
+  padding-left: 0.75rem;
+}
+
+.guide-moment--dialog .guide-bubble__text {
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.guide-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 380px) {
+  .nana-portrait {
+    width: 3.5rem;
+  }
+
+  .guide-bubble {
+    padding-left: 0.65rem;
+  }
+
+  .guide-bubble__text {
+    font-size: 0.78rem;
+  }
+}
+
+[data-motion="reduced"] .guide-bubble__dismiss {
+  transition: none;
+}

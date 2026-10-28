@@ -1,0 +1,331 @@
+.gallery-screen {
+  gap: clamp(0.8rem, 2.2vh, 1.4rem);
+}
+
+.gallery-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.gallery-heading {
+  min-width: 0;
+}
+
+.gallery-heading .eyebrow {
+  font-size: 0.64rem;
+}
+
+.gallery-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 3.6vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.gallery-lede {
+  max-width: 44ch;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.gallery-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.7rem, 1.6vw, 1.15rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gallery-grid__item {
+  display: flex;
+  min-width: 0;
+}
+
+.gallery-card {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  padding: clamp(0.65rem, 1.2vw, 0.9rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(160deg, rgba(255, 245, 255, 0.06), transparent 45%),
+    var(--color-surface-raised);
+  color: var(--color-text);
+  text-align: left;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0.5rem 1.4rem rgba(2, 0, 8, 0.26);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+button.gallery-card {
+  cursor: pointer;
+}
+
+button.gallery-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 210, 122, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 1rem 2.2rem rgba(2, 0, 8, 0.36);
+}
+
+.gallery-card:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.gallery-card__art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 6.4rem;
+  margin: -0.15rem -0.1rem 0.45rem;
+  padding: 0.2rem;
+  border-radius: calc(var(--radius-lg) - 0.35rem);
+  background:
+    radial-gradient(80% 80% at 50% 44%, rgba(122, 78, 180, 0.22), transparent 70%),
+    radial-gradient(60% 60% at 50% 100%, rgba(255, 210, 122, 0.06), transparent 72%);
+  overflow: hidden;
+}
+
+.gallery-card__art::after {
+  content: "";
+  position: absolute;
+  inset: 0.35rem;
+  border: 1px solid rgba(255, 245, 255, 0.045);
+  border-radius: calc(var(--radius-lg) - 0.5rem);
+  pointer-events: none;
+}
+
+.constellation.constellation--gallery {
+  width: min(100%, 8.4rem);
+  height: auto;
+  aspect-ratio: 1;
+  filter: drop-shadow(0 0 0.9rem color-mix(in srgb, var(--constellation-accent, var(--color-lilac)) 30%, transparent));
+}
+
+.gallery-card.is-locked {
+  border-style: dashed;
+  background:
+    linear-gradient(160deg, rgba(255, 245, 255, 0.025), transparent 55%),
+    rgba(15, 8, 30, 0.58);
+}
+
+.gallery-card.is-locked .constellation--gallery {
+  filter: blur(4.5px) saturate(0.48) brightness(0.92);
+  opacity: 0.68;
+  transform: scale(1.06);
+}
+
+.gallery-card__lock {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.55rem;
+  height: 2.55rem;
+  border: 1px solid rgba(255, 245, 255, 0.14);
+  border-radius: 50%;
+  background: rgba(16, 8, 32, 0.7);
+  color: var(--color-text-dim);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.gallery-card__lock .icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.gallery-card__number {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.42rem;
+  z-index: 1;
+  padding: 0.18rem 0.42rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: rgba(12, 6, 26, 0.58);
+  color: var(--color-text-dim);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.gallery-card__name {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 2.35em;
+  font-size: 0.98rem;
+  font-weight: 850;
+  letter-spacing: -0.02em;
+  line-height: 1.18;
+  text-wrap: pretty;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.gallery-card.is-locked .gallery-card__name {
+  color: var(--color-text-muted);
+  letter-spacing: 0;
+}
+
+.gallery-card__caption {
+  display: -webkit-box;
+  overflow: hidden;
+  min-height: 2.6em;
+  margin-top: 0.2rem;
+  color: var(--color-text-dim);
+  font-size: 0.7rem;
+  line-height: 1.45;
+  text-wrap: pretty;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.gallery-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: 0.6rem;
+}
+
+.gallery-card__stars {
+  justify-content: flex-start;
+  gap: 0.06rem;
+}
+
+.gallery-card__stars .star-slot .icon {
+  width: 0.86rem;
+  height: 0.86rem;
+}
+
+.gallery-card__action {
+  color: var(--color-text-dim);
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+}
+
+button.gallery-card:hover .gallery-card__action {
+  color: var(--color-gold-soft);
+}
+
+.gallery-card__locked-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-text-dim);
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.gallery-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding-block: var(--space-2) max(var(--space-2), env(safe-area-inset-bottom));
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+@media (max-width: 1060px) {
+  .gallery-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
+  .gallery-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .gallery-screen {
+    gap: var(--space-3);
+  }
+
+  .gallery-title {
+    font-size: clamp(1.55rem, 7vw, 2rem);
+  }
+
+  .gallery-lede {
+    font-size: var(--text-xs);
+  }
+
+  .gallery-card {
+    padding: 0.58rem;
+    border-radius: var(--radius-md);
+  }
+
+  .gallery-card__art {
+    min-height: 5.4rem;
+    margin-bottom: 0.35rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .constellation.constellation--gallery {
+    width: min(100%, 7.4rem);
+  }
+
+  .gallery-card__name {
+    font-size: 0.86rem;
+  }
+
+  .gallery-card__caption {
+    font-size: 0.64rem;
+  }
+
+  .gallery-footer {
+    font-size: 0.66rem;
+  }
+}
+
+@media (max-width: 350px) {
+  .gallery-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .constellation.constellation--gallery {
+    width: min(100%, 8.4rem);
+  }
+}
+
+[data-motion="reduced"] .gallery-card {
+  transition: none;
+}
+
+[data-motion="reduced"] button.gallery-card:hover {
+  transform: none;
+}

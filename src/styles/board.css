@@ -1,0 +1,225 @@
+.board-frame {
+  position: relative;
+  width: min(100%, 37.5rem, calc(100dvh - 19rem));
+  aspect-ratio: 1;
+  padding: clamp(0.35rem, 1.2vw, 0.6rem);
+  border: 1px solid var(--color-border-strong);
+  border-radius: clamp(1.3rem, 3vw, 1.9rem);
+  background:
+    linear-gradient(145deg, rgba(255, 245, 255, 0.14), rgba(255, 245, 255, 0.025) 36%, rgba(2, 0, 8, 0.22)),
+    linear-gradient(180deg, #22133f, #120925);
+  box-shadow:
+    var(--shadow-deep),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(2, 0, 8, 0.5);
+  transition:
+    box-shadow var(--duration-medium) ease,
+    border-color var(--duration-medium) ease;
+}
+
+.board-frame.is-revealing {
+  border-color: rgba(255, 210, 122, 0.5);
+  box-shadow:
+    var(--shadow-deep),
+    0 0 3.5rem rgba(255, 210, 122, 0.25),
+    0 0 8rem rgba(200, 167, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.board-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0.3rem;
+  border: 1px solid rgba(255, 245, 255, 0.055);
+  border-radius: calc(clamp(1.3rem, 3vw, 1.9rem) - 0.25rem);
+  pointer-events: none;
+}
+
+.board-frame.is-shaking {
+  animation: board-shake 400ms var(--ease-out);
+}
+
+.board-view {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: clamp(1rem, 2.5vw, 1.5rem);
+  background: #0d0620;
+  box-shadow: inset 0 0 2.5rem rgba(2, 0, 8, 0.55);
+}
+
+.board-svg {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.board-svg--play {
+  aspect-ratio: 1;
+}
+
+.board-star {
+  filter: drop-shadow(0 0 0.06rem rgba(255, 246, 230, 0.45));
+}
+
+.board-constellation {
+  pointer-events: none;
+}
+
+.board-frost {
+  pointer-events: none;
+}
+
+.board-frost__hint {
+  opacity: 0.85;
+}
+
+.board-frost__sheen {
+  opacity: 0.85;
+}
+
+.ribbon {
+  cursor: pointer;
+  outline: none;
+  transition: filter 180ms ease;
+}
+
+.ribbon:focus {
+  outline: none;
+}
+
+.ribbon-halo {
+  stroke: var(--color-focus);
+  stroke-width: 0.92;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.ribbon:focus-visible .ribbon-halo,
+.ribbon:focus .ribbon-halo {
+  opacity: 1;
+  stroke-width: 1.12;
+}
+
+.ribbon:focus .ribbon-main,
+.ribbon:hover .ribbon-main,
+.ribbon:focus-visible .ribbon-main {
+  filter: brightness(1.12) saturate(1.06);
+}
+
+.ribbon.is-bumped .ribbon-main,
+.ribbon.is-bumped .ribbon-arrow {
+  filter: brightness(1.85) saturate(1.25);
+}
+
+.ribbon-under,
+.ribbon-main,
+.ribbon-sheen,
+.ribbon-arrow {
+  pointer-events: none;
+}
+
+.ribbon-hit {
+  cursor: pointer;
+}
+
+.board-frame.is-locked .ribbon {
+  pointer-events: none;
+  cursor: default;
+}
+
+.ribbon.is-hinted .ribbon-halo {
+  animation: hint-pulse 720ms ease-in-out 2;
+}
+
+.ribbon.is-blocker .ribbon-main,
+.ribbon.is-blocker .ribbon-arrow {
+  animation: blocker-flash 540ms ease-out;
+}
+
+.ribbon.is-colliding .ribbon-main {
+  animation: blocker-flash 340ms ease-out;
+}
+
+.ribbon.is-sliding {
+  pointer-events: none;
+}
+
+@keyframes hint-pulse {
+  0%,
+  100% {
+    opacity: 0.08;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes blocker-flash {
+  0% {
+    filter: brightness(1) saturate(1);
+  }
+  22% {
+    filter: brightness(1.85) saturate(1.3);
+  }
+  62% {
+    filter: brightness(1.2) saturate(1.1);
+  }
+  100% {
+    filter: brightness(1) saturate(1);
+  }
+}
+
+@keyframes board-shake {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  18% {
+    transform: translate3d(-0.22rem, 0.1rem, 0) rotate(-0.12deg);
+  }
+  38% {
+    transform: translate3d(0.2rem, -0.08rem, 0) rotate(0.1deg);
+  }
+  58% {
+    transform: translate3d(-0.12rem, 0.06rem, 0) rotate(-0.06deg);
+  }
+  78% {
+    transform: translate3d(0.08rem, 0, 0);
+  }
+}
+
+@media (max-width: 520px) {
+  .board-frame {
+    width: min(100%, 37.5rem, calc(100dvh - 20rem));
+    padding: 0.32rem;
+    border-radius: 1.35rem;
+  }
+
+  .board-view {
+    border-radius: 1.08rem;
+  }
+}
+
+[data-motion="reduced"] .board-frame.is-shaking {
+  animation: none;
+}
+
+[data-motion="reduced"] .ribbon.is-hinted .ribbon-halo {
+  animation: none;
+  opacity: 0.7;
+}
+
+[data-motion="reduced"] .ribbon.is-blocker .ribbon-main,
+[data-motion="reduced"] .ribbon.is-blocker .ribbon-arrow {
+  filter: brightness(1.8) saturate(1.25);
+}
+
+[data-motion="reduced"] .board-frame {
+  transition: none;
+}
