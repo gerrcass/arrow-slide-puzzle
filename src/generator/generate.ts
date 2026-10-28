@@ -115,7 +115,12 @@ function buildOrganicContext(
     }
   };
 
-  const starts = {} as Record<Heading, Cell[]>;
+  const starts: Record<Heading, Cell[]> = {
+    up: [],
+    right: [],
+    down: [],
+    left: [],
+  };
   for (const heading of HEADINGS) {
     const cells: Cell[] = [];
     for (let y = 0; y < height; y += 1) {
