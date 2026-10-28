@@ -19,6 +19,8 @@ land in the gitignored `test-results/evidence/`.
 ## Browser suite evidence
 
 ```sh
+npm run verify
+# or just the browser half:
 npm run test:e2e
 ```
 

@@ -17,6 +17,7 @@ Nana Pearl's Arrow Slide Puzzle: a static, deep-violet browser puzzle game with 
 - `npm run typecheck` — strict TypeScript.
 - `npm run test` — Vitest, including solver verification of every level.
 - `npm run build` — production build.
+- `npm run verify` — the full local gate: check plus browser tests.
 - `npm run preview` — serve the production build.
 - `npm run test:e2e` — Playwright against the production preview.
 

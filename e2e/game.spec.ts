@@ -589,6 +589,8 @@ test.describe('responsive', () => {
     }
     await page.waitForTimeout(900);
     await shot(page, 'win-375.png');
+    await dialog.locator('.dialog-close').click();
+    await expect(page).toHaveURL(/#\/levels$/);
   });
 
   test('landscape keeps the result header and actions visible', async ({ page }) => {
@@ -699,6 +701,32 @@ test.describe('responsive', () => {
     expect(landscapeBoard?.width ?? 0).toBeGreaterThan(250);
     await expect(page.locator('.play-footer')).toBeInViewport();
     expect(await noHorizontalOverflow(page)).toBe(true);
+  });
+
+  test('the densest board stays above the 24 px target floor', async ({ page }) => {
+    const levels: Record<string, { bestStars: 3; completedAt: string }> = {};
+    for (let index = 0; index < 8; index += 1) {
+      levels[String(index)] = {
+        bestStars: 3,
+        completedAt: '2026-10-20T10:00:00.000Z',
+      };
+    }
+    for (const size of [
+      { width: 390, height: 844 },
+      { width: 320, height: 568 },
+    ]) {
+      await page.setViewportSize(size);
+      await seedSave(page, { levels });
+      await page.goto('/#/play/9');
+      await expect(page.locator('.ribbon').first()).toBeVisible();
+      const target = await page.evaluate(() => {
+        const svg = document.querySelector<SVGSVGElement>('.board-svg');
+        if (!svg) return 0;
+        const rect = svg.getBoundingClientRect();
+        return (rect.width / svg.viewBox.baseVal.width) * 1.02;
+      });
+      expect(target, `${size.width}x${size.height}`).toBeGreaterThanOrEqual(24);
+    }
   });
 
   test('settings fit 320 px and the selected option has a visible tick', async ({ page }) => {

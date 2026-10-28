@@ -74,6 +74,7 @@ npm run test:e2e        # Playwright + axe against the production build
 npm run build           # production build
 npm run preview         # serve the production build
 npm run check           # typecheck + unit tests + build
+npm run verify          # check + Playwright/axe in one command
 npm run levels:generate # regenerate the twelve committed levels
 npm run assets:generate # regenerate icons and the social card
 ```

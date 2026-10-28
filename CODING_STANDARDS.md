@@ -39,3 +39,16 @@ Review-time rules for judgement calls. A mechanical rule that can be checked bel
 - CI must be green on typecheck, unit, build, and E2E before merge.
 - Commits are small, conventional, and explain why. PR bodies follow the `/pr` template and carry evidence.
 - Clean up branches, worktrees, and open issues before declaring done.
+
+## Release surface
+
+- A claim about a measurement (target size, Lighthouse, viewport fit, offline)
+  comes from the current build. Record the command or capture in `docs/evidence/`.
+- Every dialog close control is clicked in a browser test, not only checked with
+  `toBeInViewport`. A visible X that cannot be clicked is still broken.
+- Before calling a layout responsive, cover 320×568, 375×667, 390×844, 568×320,
+  667×375, 844×390, and 1440×900. Assert no horizontal overflow, the footer and
+  primary actions in view, and a stable board position.
+- Offline evidence includes a cold new tab, not only a reload of the warm tab.
+- Generated content is regenerated with `npm run levels:generate`; a diff means
+  the committed seed and the checked-in levels disagree.
