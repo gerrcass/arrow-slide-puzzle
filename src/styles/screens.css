@@ -251,6 +251,16 @@
   color: var(--color-gold);
 }
 
+.home-resume {
+  --btn-color: var(--color-gold-soft);
+  padding-inline: 0.35rem;
+}
+
+.home-resume .icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
 @media (max-width: 900px) {
   .home-hero {
     grid-template-columns: 1fr;
@@ -321,9 +331,14 @@
   }
 }
 
+[data-motion="reduced"] .home-preview__tilt,
+[data-motion="reduced"] .home-preview:hover .home-preview__tilt {
+  transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .home-preview__tilt,
-  .home-preview:hover .home-preview__tilt {
+  html:not([data-motion]) .home-preview__tilt,
+  html:not([data-motion]) .home-preview:hover .home-preview__tilt {
     transform: none;
   }
 }

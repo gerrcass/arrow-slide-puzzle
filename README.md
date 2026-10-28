@@ -6,19 +6,22 @@ A quiet, deep-violet browser puzzle. Tap a ribbon that can slide all the way
 off the board; a blocked ribbon bumps and costs one heart. Three hearts, up to
 three stars, and a constellation waiting underneath every tangle.
 
-**Status:** the core loop, the twelve-level campaign, and local progress are in
-progress on `feat/arrow-slide-puzzle`. See `.scratch/arrow-slide-puzzle/spec.md`
-for the full product and `docs/adr/` for the decisions.
+**Status:** the core loop, twelve-level campaign, level select, stars, unlocks,
+and local-first progress are in place. The constellation reveal, Nana Pearl’s
+guide, sound, assistive mode, and offline PWA arrive in later tickets. See
+`.scratch/arrow-slide-puzzle/spec.md` for the full product and `docs/adr/` for
+the decisions.
 
 ## Development
 
 ```sh
 npm install
-npm run dev        # Vite dev server
-npm run typecheck  # strict TypeScript
-npm run test       # Vitest: engine, solver, content, progress
-npm run build      # production build
-npm run preview    # serve the production build
+npm run dev             # Vite dev server
+npm run typecheck       # strict TypeScript
+npm run test            # Vitest: engine, solver, content, progress
+npm run build           # production build
+npm run preview         # serve the production build
+npm run levels:generate # regenerate the twelve committed levels
 ```
 
 ## Where things live
@@ -29,7 +32,7 @@ npm run preview    # serve the production build
 - `src/generator/` — the offline, seeded reverse-construction generator.
 - `src/app/` — hash router, screens, SVG renderer, progress store.
 - `src/styles/` — tokens and the deep-violet visual system.
-- `docs/evidence/` — mobile screenshots captured from the built app.
+- `docs/evidence/` — 390×844 captures of the built app.
 
 The rule engine is the source of truth. Read `GLOSSARY.md` and `ADR-0002`
 before changing rules: removal is monotonic and the game has no dead ends.

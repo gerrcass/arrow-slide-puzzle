@@ -1,35 +1,80 @@
 import { describe, expect, it } from 'vitest';
-import { parseRoute, routeHash } from './router';
+import { parseRoute, resolveRoute, routeHash } from './router';
+
+const LEVEL_COUNT = 12;
 
 describe('hash routing', () => {
   it('treats an empty hash and #/ as home', () => {
-    expect(parseRoute('', 1)).toEqual({ name: 'home' });
-    expect(parseRoute('#/', 1)).toEqual({ name: 'home' });
-    expect(parseRoute('#', 1)).toEqual({ name: 'home' });
+    expect(parseRoute('', LEVEL_COUNT)).toEqual({ name: 'home' });
+    expect(parseRoute('#/', LEVEL_COUNT)).toEqual({ name: 'home' });
+    expect(parseRoute('#', LEVEL_COUNT)).toEqual({ name: 'home' });
+  });
+
+  it('parses the level select route', () => {
+    expect(parseRoute('#/levels', LEVEL_COUNT)).toEqual({ name: 'levels' });
+    expect(parseRoute('#/levels/', LEVEL_COUNT)).toEqual({ name: 'levels' });
   });
 
   it('maps one-based play URLs to zero-based level indexes', () => {
-    expect(parseRoute('#/play/1', 12)).toEqual({ name: 'play', index: 0 });
-    expect(parseRoute('#/play/12', 12)).toEqual({ name: 'play', index: 11 });
-    expect(parseRoute('#/play/1/', 12)).toEqual({ name: 'play', index: 0 });
+    expect(parseRoute('#/play/1', LEVEL_COUNT)).toEqual({ name: 'play', index: 0 });
+    expect(parseRoute('#/play/12', LEVEL_COUNT)).toEqual({ name: 'play', index: 11 });
+    expect(parseRoute('#/play/1/', LEVEL_COUNT)).toEqual({ name: 'play', index: 0 });
   });
 
   it('rejects zero, negative, fractional, and out-of-range level URLs', () => {
-    expect(parseRoute('#/play/0', 12)).toEqual({ name: 'unknown' });
-    expect(parseRoute('#/play/13', 12)).toEqual({ name: 'unknown' });
-    expect(parseRoute('#/play/-1', 12)).toEqual({ name: 'unknown' });
-    expect(parseRoute('#/play/1.5', 12)).toEqual({ name: 'unknown' });
+    expect(parseRoute('#/play/0', LEVEL_COUNT)).toEqual({ name: 'unknown' });
+    expect(parseRoute('#/play/13', LEVEL_COUNT)).toEqual({ name: 'unknown' });
+    expect(parseRoute('#/play/-1', LEVEL_COUNT)).toEqual({ name: 'unknown' });
+    expect(parseRoute('#/play/1.5', LEVEL_COUNT)).toEqual({ name: 'unknown' });
   });
 
   it('rejects unknown routes', () => {
-    expect(parseRoute('#/gallery', 12)).toEqual({ name: 'unknown' });
-    expect(parseRoute('#/levels', 12)).toEqual({ name: 'unknown' });
-    expect(parseRoute('#/play', 12)).toEqual({ name: 'unknown' });
+    expect(parseRoute('#/gallery', LEVEL_COUNT)).toEqual({ name: 'unknown' });
+    expect(parseRoute('#/play', LEVEL_COUNT)).toEqual({ name: 'unknown' });
   });
 
   it('builds route hashes', () => {
     expect(routeHash({ name: 'home' })).toBe('#/');
+    expect(routeHash({ name: 'levels' })).toBe('#/levels');
     expect(routeHash({ name: 'play', index: 0 })).toBe('#/play/1');
     expect(routeHash({ name: 'play', index: 11 })).toBe('#/play/12');
+  });
+});
+
+describe('safe route resolution', () => {
+  const unlocked = (index: number): boolean => index < 2;
+
+  it('passes through home, levels, and unlocked play routes', () => {
+    expect(resolveRoute({ name: 'home' }, LEVEL_COUNT, unlocked)).toEqual({
+      route: { name: 'home' },
+    });
+    expect(resolveRoute({ name: 'levels' }, LEVEL_COUNT, unlocked)).toEqual({
+      route: { name: 'levels' },
+    });
+    expect(resolveRoute({ name: 'play', index: 0 }, LEVEL_COUNT, unlocked)).toEqual({
+      route: { name: 'play', index: 0 },
+    });
+  });
+
+  it('redirects a locked deep link to the level select with a notice', () => {
+    expect(resolveRoute({ name: 'play', index: 2 }, LEVEL_COUNT, unlocked)).toEqual({
+      route: { name: 'levels' },
+      replace: true,
+      notice: 'That tangle is still locked. Complete the one before it first.',
+    });
+  });
+
+  it('redirects unknown routes home', () => {
+    expect(resolveRoute({ name: 'unknown' }, LEVEL_COUNT, unlocked)).toEqual({
+      route: { name: 'home' },
+      replace: true,
+    });
+  });
+
+  it('redirects impossible play indexes home', () => {
+    expect(resolveRoute({ name: 'play', index: 99 }, LEVEL_COUNT, unlocked)).toEqual({
+      route: { name: 'home' },
+      replace: true,
+    });
   });
 });

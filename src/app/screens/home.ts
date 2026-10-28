@@ -35,7 +35,7 @@ export function homeScreen(context: AppContext): Screen {
   const play = el('button', 'btn btn--primary btn--play');
   play.type = 'button';
   play.append(createIcon('play'), 'Play');
-  play.addEventListener('click', () => context.navigate('#/play/1'));
+  play.addEventListener('click', () => context.navigate('#/levels'));
   const rule = el('button', 'btn btn--secondary');
   rule.type = 'button';
   rule.append(createIcon('sparkle'), 'The rule');
@@ -58,14 +58,35 @@ export function homeScreen(context: AppContext): Screen {
   });
   append(actions, play, rule);
 
+  const save = context.progress.data;
+  const nextLevel = context.progress.continueLevel();
+  const hasProgress = save.lastPlayed !== null || context.progress.completedCount > 0;
+  if (hasProgress && nextLevel !== null) {
+    const allDone = context.progress.completedCount >= LEVELS.length;
+    const resume = el('button', 'btn btn--ghost home-resume');
+    resume.type = 'button';
+    resume.append(
+      createIcon('arrow-right'),
+      allDone ? `Replay level ${nextLevel + 1}` : `Continue level ${nextLevel + 1}`,
+    );
+    resume.addEventListener('click', () => context.navigate(`#/play/${nextLevel + 1}`));
+    actions.append(resume);
+  }
+
   const chapters = new Set(LEVELS.map((level) => level.chapter)).size;
   const meta = el('div', 'home-meta');
   const pieces = LEVELS.reduce((total, level) => total + level.board.pieces.length, 0);
-  const metaItems = [
-    { icon: 'sparkle', text: LEVELS.length === 1 ? '1 tangle' : `${LEVELS.length} tangles` },
-    { icon: 'moon', text: chapters === 1 ? '1 chapter' : `${chapters} chapters` },
-    { icon: 'heart', text: `${pieces} ribbons` },
-  ] as const;
+  const metaItems = hasProgress
+    ? ([
+        { icon: 'star', text: `${context.progress.totalStars} / ${LEVELS.length * 3} stars` },
+        { icon: 'check', text: `${context.progress.completedCount} / ${LEVELS.length} cleared` },
+        { icon: 'moon', text: chapters === 1 ? '1 chapter' : `${chapters} chapters` },
+      ] as const)
+    : ([
+        { icon: 'sparkle', text: LEVELS.length === 1 ? '1 tangle' : `${LEVELS.length} tangles` },
+        { icon: 'moon', text: chapters === 1 ? '1 chapter' : `${chapters} chapters` },
+        { icon: 'heart', text: `${pieces} ribbons` },
+      ] as const);
   for (const item of metaItems) {
     const pill = el('span', 'pill');
     pill.append(createIcon(item.icon, 'icon icon--sm'), item.text);
@@ -91,7 +112,7 @@ export function homeScreen(context: AppContext): Screen {
 
   const preview = el('div', 'home-preview');
   preview.setAttribute('aria-hidden', 'true');
-  const previewLevel = LEVELS[0];
+  const previewLevel = LEVELS[nextLevel ?? 0];
   const previewFrame = el('div', 'board-frame board-frame--preview');
   const tilt = el('div', 'home-preview__tilt');
   if (previewLevel) {

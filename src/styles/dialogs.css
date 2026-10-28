@@ -111,6 +111,7 @@
 .dialog .eyebrow {
   position: relative;
   margin-bottom: var(--space-2);
+  padding-inline: 1.5rem;
 }
 
 .dialog-title {
@@ -341,10 +342,23 @@
   gap: var(--space-2);
 }
 
+.win-best {
+  color: var(--color-text-dim);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
 .settings-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+}
+
+.settings-actions .btn.is-armed {
+  --btn-bg: rgba(255, 127, 168, 0.26);
+  --btn-border: rgba(255, 143, 163, 0.6);
+  --btn-color: #ffe2ea;
 }
 
 @keyframes star-pop {
@@ -403,10 +417,50 @@
   }
 }
 
+@media (max-height: 640px) {
+  .dialog--settings .dialog-panel {
+    padding: 1rem;
+  }
+
+  .dialog--settings .dialog-title {
+    font-size: 1.35rem;
+  }
+
+  .dialog--settings .settings-section {
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    padding-top: 0.7rem;
+  }
+
+  .dialog--settings .settings-choice {
+    min-height: 2.2rem;
+    padding: 0.4rem 0.7rem;
+    font-size: 0.78rem;
+  }
+
+  .dialog--settings .dialog-actions {
+    margin-top: 0.7rem;
+  }
+
+  .dialog--win .win-constellation__caption,
+  .dialog--campaign .win-constellation__caption {
+    display: none;
+  }
+
+  .dialog--win .dialog-body,
+  .dialog--campaign .dialog-body {
+    margin-top: 0.5rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .star-slot.is-popping {
+  html:not([data-motion]) .star-slot.is-popping {
     animation: none;
   }
+}
+
+[data-motion="reduced"] .star-slot.is-popping {
+  animation: none;
 }
 
 body:has(dialog[open]) {

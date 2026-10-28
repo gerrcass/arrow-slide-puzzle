@@ -9,6 +9,12 @@
   gap: var(--space-3);
 }
 
+.play-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .play-heading {
   min-width: 0;
 }
@@ -199,10 +205,6 @@
 @media (max-width: 520px) {
   .play-tangle-pill {
     display: none;
-  }
-
-  .play-header {
-    grid-template-columns: auto minmax(0, 1fr);
   }
 
   .play-status {

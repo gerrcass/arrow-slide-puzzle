@@ -32,6 +32,12 @@ function plural(count: number, singular: string, pluralWord = `${singular}s`): s
   return count === 1 ? singular : pluralWord;
 }
 
+function starCount(value: number): 1 | 2 | 3 {
+  if (value >= 3) return 3;
+  if (value === 2) return 2;
+  return 1;
+}
+
 export function playScreen(context: AppContext, level: Level): Screen {
   instructionsCounter += 1;
   const instructionsId = `play-instructions-${instructionsCounter}`;
@@ -50,9 +56,9 @@ export function playScreen(context: AppContext, level: Level): Screen {
   const header = el('header', 'play-header');
   const back = el('button', 'icon-button play-back');
   back.type = 'button';
-  back.setAttribute('aria-label', 'Back to the title');
+  back.setAttribute('aria-label', 'Back to level select');
   back.append(createIcon('arrow-left'));
-  back.addEventListener('click', () => context.navigate('#/'));
+  back.addEventListener('click', () => context.navigate('#/levels'));
 
   const headingBlock = el('div', 'play-heading');
   const eyebrow = el(
@@ -65,13 +71,20 @@ export function playScreen(context: AppContext, level: Level): Screen {
   heading.setAttribute('data-screen-heading', '');
   append(headingBlock, eyebrow, heading);
 
+  const tools = el('div', 'play-tools');
   const tanglePill = el('span', 'pill play-tangle-pill');
   tanglePill.append(
     createIcon('sparkle', 'icon icon--sm'),
     `Tangle ${String(level.index + 1).padStart(2, '0')}`,
   );
+  const settingsButton = el('button', 'icon-button play-settings');
+  settingsButton.type = 'button';
+  settingsButton.setAttribute('aria-label', 'Settings');
+  settingsButton.append(createIcon('settings'));
+  settingsButton.addEventListener('click', () => context.openSettings());
+  append(tools, tanglePill, settingsButton);
 
-  append(header, back, headingBlock, tanglePill);
+  append(header, back, headingBlock, tools);
 
   const status = el('div', 'play-status');
   const hearts = createHeartRow(attempt.hearts);
@@ -133,6 +146,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
   boardView.render(attempt);
   renderHud();
   updateControls();
+  context.progress.setLastPlayed(level.index);
 
   const onKeyDown = (event: KeyboardEvent): void => {
     if (event.defaultPrevented) return;
@@ -155,6 +169,9 @@ export function playScreen(context: AppContext, level: Level): Screen {
     } else if (key === 'r') {
       event.preventDefault();
       requestReset();
+    } else if (key === 'escape') {
+      event.preventDefault();
+      context.openSettings();
     }
   };
   window.addEventListener('keydown', onKeyDown);
@@ -250,7 +267,10 @@ export function playScreen(context: AppContext, level: Level): Screen {
 
     for (const event of settled.events) {
       if (event.type === 'won') {
-        showWin(event.stars);
+        const previousBest = context.progress.bestStars(level.index);
+        context.progress.recordCompletion(level.index, starCount(event.stars));
+        const best = context.progress.bestStars(level.index);
+        showWin(event.stars, previousBest, best);
         return;
       }
       if (event.type === 'lost') {
@@ -317,7 +337,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
     heading.focus();
   }
 
-  function showWin(stars: number): void {
+  function showWin(stars: number, previousBest: number, best: number): void {
     if (disposed) return;
     context.announce(`Tangle cleared with ${stars} ${plural(stars, 'star')}.`, 'assertive');
 
@@ -333,6 +353,14 @@ export function playScreen(context: AppContext, level: Level): Screen {
       visual.append(artWrap);
     }
     visual.append(createStarRow(stars, 3, { animated: true }));
+    const bestLine = el(
+      'p',
+      'win-best',
+      previousBest === 0 || stars > previousBest
+        ? `New best · ${best} of 3 stars`
+        : `Best stays at ${best} of 3 stars`,
+    );
+    visual.append(bestLine);
 
     const nextLevel = LEVELS[level.index + 1];
     const actions: DialogAction[] = [];
@@ -348,17 +376,22 @@ export function playScreen(context: AppContext, level: Level): Screen {
         variant: 'secondary',
         onSelect: restart,
       });
+      actions.push({
+        label: 'Levels',
+        variant: 'ghost',
+        onSelect: () => context.navigate('#/levels'),
+      });
     } else {
       actions.push({
-        label: 'Play again',
+        label: 'Back to levels',
         variant: 'primary',
         autofocus: true,
-        onSelect: restart,
+        onSelect: () => context.navigate('#/levels'),
       });
       actions.push({
-        label: 'Back to title',
+        label: 'Play again',
         variant: 'secondary',
-        onSelect: () => context.navigate('#/'),
+        onSelect: restart,
       });
     }
 
@@ -371,7 +404,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
         : 'Every ribbon has left the board. The whole sky belongs to you now.',
       content: visual,
       actions,
-      onCancel: () => context.navigate('#/'),
+      onCancel: () => context.navigate('#/levels'),
     });
   }
 
@@ -386,9 +419,9 @@ export function playScreen(context: AppContext, level: Level): Screen {
         onSelect: restart,
       },
       {
-        label: 'Back to title',
+        label: 'Levels',
         variant: 'secondary',
-        onSelect: () => context.navigate('#/'),
+        onSelect: () => context.navigate('#/levels'),
       },
     ];
     activeDialog = openDialog({

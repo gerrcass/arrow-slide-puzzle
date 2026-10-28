@@ -1,31 +1,41 @@
 import { LEVELS } from '../content/levels';
 import type { AppContext, Screen } from './context';
-import { applyMotionAttribute, systemPrefersReducedMotion } from './motion';
-import { parseRoute } from './router';
+import {
+  applyMotionAttribute,
+  resolveReducedMotion,
+  systemPrefersReducedMotion,
+} from './motion';
+import type { ProgressStore } from './progress';
+import { parseRoute, resolveRoute, routeHash } from './router';
 import { homeScreen } from './screens/home';
+import { levelsScreen } from './screens/levels';
 import { playScreen } from './screens/play';
+import { openSettingsDialog } from './settingsDialog';
 import { el } from './ui/dom';
+import type { DialogHandle } from './ui/dialog';
 
 export class App {
   private readonly root: HTMLElement;
+  private readonly progress: ProgressStore;
   private readonly politeRegion: HTMLElement;
   private readonly assertiveRegion: HTMLElement;
-  private currentScreen: Screen | null = null;
-  private politeTimer: number | null = null;
-  private assertiveTimer: number | null = null;
   private readonly context: AppContext;
   private readonly mediaQuery: MediaQueryList | null;
+  private currentScreen: Screen | null = null;
+  private settingsDialog: DialogHandle | null = null;
+  private politeTimer: number | null = null;
+  private assertiveTimer: number | null = null;
 
-  constructor(root: HTMLElement) {
+  constructor(root: HTMLElement, progress: ProgressStore) {
     this.root = root;
+    this.progress = progress;
     this.root.classList.add('app');
     this.root.replaceChildren();
 
     const ambient = el('div', 'ambient');
     ambient.setAttribute('aria-hidden', 'true');
     for (const modifier of ['rose', 'violet', 'mint']) {
-      const glow = el('div', `ambient__glow ambient__glow--${modifier}`);
-      ambient.append(glow);
+      ambient.append(el('div', `ambient__glow ambient__glow--${modifier}`));
     }
     ambient.append(el('div', 'ambient__stars'));
 
@@ -39,19 +49,23 @@ export class App {
     this.root.append(ambient, this.politeRegion, this.assertiveRegion);
 
     this.context = {
+      progress: this.progress,
       navigate: (hash) => this.navigate(hash),
       announce: (message, priority = 'polite') => this.announce(message, priority),
-      isReducedMotion: () => systemPrefersReducedMotion(),
+      openSettings: () => this.openSettings(),
+      isReducedMotion: () =>
+        resolveReducedMotion(
+          this.progress.data.settings.motion,
+          systemPrefersReducedMotion(),
+        ),
     };
 
     this.mediaQuery =
       typeof window.matchMedia === 'function'
         ? window.matchMedia('(prefers-reduced-motion: reduce)')
         : null;
-    applyMotionAttribute(this.context.isReducedMotion());
-    this.mediaQuery?.addEventListener('change', () => {
-      applyMotionAttribute(this.context.isReducedMotion());
-    });
+    this.applyMotion();
+    this.mediaQuery?.addEventListener('change', () => this.applyMotion());
   }
 
   start(): void {
@@ -84,21 +98,43 @@ export class App {
     }
   }
 
+  private applyMotion(): void {
+    applyMotionAttribute(
+      resolveReducedMotion(
+        this.progress.data.settings.motion,
+        systemPrefersReducedMotion(),
+      ),
+    );
+  }
+
+  private openSettings(): void {
+    if (document.querySelector('dialog[open]')) return;
+    this.settingsDialog = openSettingsDialog(this.context);
+  }
+
   private render(): void {
-    const route = parseRoute(window.location.hash, LEVELS.length);
+    const parsed = parseRoute(window.location.hash, LEVELS.length);
+    const resolved = resolveRoute(
+      parsed,
+      LEVELS.length,
+      (index) => this.progress.isUnlocked(index),
+    );
 
-    if (route.name === 'unknown') {
-      window.history.replaceState(null, '', '#/');
+    if (resolved.replace) {
+      window.history.replaceState(null, '', routeHash(resolved.route));
+    }
+
+    if (resolved.route.name === 'home') {
       this.showScreen(homeScreen(this.context));
       return;
     }
 
-    if (route.name === 'home') {
-      this.showScreen(homeScreen(this.context));
+    if (resolved.route.name === 'levels') {
+      this.showScreen(levelsScreen(this.context, resolved.notice ?? null));
       return;
     }
 
-    const level = LEVELS[route.index];
+    const level = LEVELS[resolved.route.index];
     if (!level) {
       this.showScreen(homeScreen(this.context));
       return;
@@ -107,6 +143,8 @@ export class App {
   }
 
   private showScreen(screen: Screen): void {
+    this.settingsDialog?.close();
+    this.settingsDialog = null;
     this.currentScreen?.destroy?.();
     this.currentScreen?.element.remove();
     this.currentScreen = screen;
