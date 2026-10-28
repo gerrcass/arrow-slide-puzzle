@@ -265,6 +265,11 @@ a {
   transform: translateY(0);
 }
 
+.icon-button:disabled {
+  opacity: 0.4;
+  transform: none;
+}
+
 .pill {
   display: inline-flex;
   align-items: center;

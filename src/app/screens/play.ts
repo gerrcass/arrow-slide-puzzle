@@ -170,8 +170,10 @@ export function playScreen(context: AppContext, level: Level): Screen {
       event.preventDefault();
       requestReset();
     } else if (key === 'escape') {
-      event.preventDefault();
-      context.openSettings();
+      if (attempt.status === 'idle') {
+        event.preventDefault();
+        context.openSettings();
+      }
     }
   };
   window.addEventListener('keydown', onKeyDown);
@@ -197,6 +199,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
     const idle = attempt.status === 'idle';
     hintButton.disabled = !idle || hintFor(attempt) === null;
     resetButton.disabled = !idle;
+    settingsButton.disabled = !idle;
   }
 
   function breakHeart(): void {

@@ -3,12 +3,13 @@ import { chapterFor } from '../../content/schema';
 import type { AppContext, Screen } from '../context';
 import { createBoardArt } from '../ui/boardSvg';
 import { createBrandMark } from '../ui/constellation';
-import { openDialog } from '../ui/dialog';
+import { openDialog, type DialogHandle } from '../ui/dialog';
 import { append, el } from '../ui/dom';
 import { createIcon } from '../ui/icons';
 
 export function homeScreen(context: AppContext): Screen {
   const screen = el('main', 'screen home-screen');
+  let activeDialog: DialogHandle | null = null;
   const nav = el('header', 'home-nav');
   const brand = el('div', 'brand');
   brand.append(createBrandMark(), el('span', 'brand__name', 'Nana Pearl’s'));
@@ -40,7 +41,7 @@ export function homeScreen(context: AppContext): Screen {
   rule.type = 'button';
   rule.append(createIcon('sparkle'), 'The rule');
   rule.addEventListener('click', () => {
-    openDialog({
+    activeDialog = openDialog({
       variant: 'info',
       eyebrow: 'The whole rule',
       title: 'Look for the clear ribbon',
@@ -146,6 +147,8 @@ export function homeScreen(context: AppContext): Screen {
   return {
     element: screen,
     destroy: () => {
+      activeDialog?.close();
+      activeDialog = null;
       screen.remove();
     },
   };

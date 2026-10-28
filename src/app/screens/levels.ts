@@ -10,6 +10,7 @@ import { createStarRow } from '../ui/stars';
 function levelAriaLabel(
   index: number,
   title: string,
+  constellationName: string | null,
   best: number,
   unlocked: boolean,
   isNext: boolean,
@@ -17,12 +18,13 @@ function levelAriaLabel(
   const chapter = chapterFor(index);
   const prefix = `Level ${index + 1}, ${title}, chapter ${chapter.numeral} ${chapter.title}.`;
   if (!unlocked) {
-    return `${prefix} Locked. Complete level ${index} to open it.`;
+    return `${prefix} A hidden constellation. Locked. Complete level ${index} to open it.`;
   }
+  const constellation = constellationName ? ` ${constellationName}.` : '';
   if (best > 0) {
-    return `${prefix} Completed. Best ${best} of 3 stars. Replay.`;
+    return `${prefix}${constellation} Completed. Best ${best} of 3 stars. Replay.`;
   }
-  return `${prefix} ${isNext ? 'Next tangle. ' : ''}Play.`;
+  return `${prefix}${constellation} ${isNext ? 'Next tangle. ' : ''}Play.`;
 }
 
 export function levelsScreen(context: AppContext, notice: string | null): Screen {
@@ -135,7 +137,14 @@ export function levelsScreen(context: AppContext, notice: string | null): Screen
       card.disabled = !unlocked;
       card.setAttribute(
         'aria-label',
-        levelAriaLabel(level.index, level.title, best, unlocked, isNext),
+        levelAriaLabel(
+          level.index,
+          level.title,
+          unlocked ? constellation?.name ?? null : null,
+          best,
+          unlocked,
+          isNext,
+        ),
       );
 
       const top = el('span', 'level-card__top');
