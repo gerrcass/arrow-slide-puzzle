@@ -30,9 +30,9 @@
 .play-heading .eyebrow {
   overflow: hidden;
   font-size: 0.64rem;
+  line-height: 1.3;
   letter-spacing: 0.15em;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .play-title {
@@ -186,6 +186,24 @@
   max-width: 42rem;
 }
 
+/*
+ * On a laptop the guide sits below the board, so a full-height board plus a
+ * bubble can push the footer out of the viewport. When a guide moment is
+ * present, reserve 23rem for the header, status, footer, gaps, and bubble.
+ * Without one, the board gets the taller budget and the screen stays calm.
+ */
+@media (min-width: 800px) {
+  .play-screen {
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow: hidden;
+  }
+
+  .play-screen:has(.guide-moment) .board-frame {
+    width: min(100%, 37.5rem, calc(100dvh - 23rem));
+  }
+}
+
 @media (min-width: 980px) {
   .guide-slot {
     min-height: 0;
@@ -266,6 +284,10 @@
 }
 
 @media (max-width: 520px) {
+  .play-chapter-index {
+    display: none;
+  }
+
   .play-tangle-pill {
     display: none;
   }

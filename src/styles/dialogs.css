@@ -220,6 +220,36 @@
   pointer-events: none;
 }
 
+/*
+ * The board is viewed through a nearly opaque frost, so the revealed art needs
+ * more contrast than the gallery card. The mask still hides everything outside
+ * a cleared path; these values only make the revealed windows feel worth it.
+ */
+.constellation--board .constellation-motif {
+  opacity: 0.72;
+}
+
+.constellation--board .constellation-motif-halo {
+  opacity: 0.5;
+}
+
+.constellation--board .constellation-orbit ellipse {
+  opacity: 0.46;
+}
+
+.constellation--board .constellation-lines line {
+  stroke: rgba(255, 226, 170, 0.94);
+  stroke-width: 0.7;
+}
+
+.constellation--board .constellation-star {
+  fill: #fff4d1;
+}
+
+.constellation--board .constellation-halo {
+  opacity: 0.2;
+}
+
 .win-constellation__name {
   margin-top: var(--space-1);
   color: var(--color-gold-soft);

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gerrcass.github.io/arrow-slide-puzzle/sitemap.xml

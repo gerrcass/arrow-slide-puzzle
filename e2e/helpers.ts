@@ -8,6 +8,7 @@ export interface SeedOptions {
   readonly tips?: boolean;
   readonly motion?: SaveData['settings']['motion'];
   readonly tutorialDone?: boolean;
+  readonly collisionTipSeen?: boolean;
   readonly lastPlayed?: number | null;
 }
 
@@ -27,7 +28,7 @@ export function makeSave(options: SeedOptions = {}): SaveData {
       ...base.tutorial,
       introSeen: options.tutorialDone ?? true,
       tutorialDone: options.tutorialDone ?? true,
-      collisionTipSeen: options.tutorialDone ?? true,
+      collisionTipSeen: options.collisionTipSeen ?? options.tutorialDone ?? true,
       heartsTipSeen: options.tutorialDone ?? true,
       winTipSeen: options.tutorialDone ?? true,
       hintTipSeen: options.tutorialDone ?? true,

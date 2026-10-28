@@ -34,19 +34,23 @@ async function clearLevel(page: Page, index: number): Promise<void> {
   }
 }
 
-function blockedPieceId(): string {
-  const others = (id: string) => FIRST.board.pieces.filter((piece) => piece.id !== id);
-  const blocked = FIRST.board.pieces.find(
+function blockedPieceIdFor(index: number): string {
+  const board = LEVELS[index]!.board;
+  const blocked = board.pieces.find(
     (piece) =>
       clearanceFor(
         piece,
-        others(piece.id),
-        FIRST.board.width,
-        FIRST.board.height,
+        board.pieces.filter((other) => other.id !== piece.id),
+        board.width,
+        board.height,
       ).kind === 'blocked',
   );
   expect(blocked).toBeDefined();
   return blocked!.id;
+}
+
+function blockedPieceId(): string {
+  return blockedPieceIdFor(0);
 }
 
 test.describe('first run', () => {
@@ -100,6 +104,11 @@ test.describe('play', () => {
     await expect(dialog).toContainText(constellation!.name);
     await expect(dialog).toContainText('Constellation collected');
     await page.screenshot({ path: 'docs/evidence/win-polished-390.png' });
+    const winViolations = await seriousAxeViolations(page);
+    expect(
+      winViolations,
+      winViolations.map((v) => `${v.id}: ${v.targets.join(', ')}`).join('; '),
+    ).toEqual([]);
 
     await dialog.getByRole('button', { name: 'View gallery' }).click();
     await expect(page).toHaveURL(/#\/gallery$/);
@@ -320,6 +329,50 @@ test.describe('responsive', () => {
     await page.goto('/#/gallery');
     expect(await noHorizontalOverflow(page)).toBe(true);
     await page.screenshot({ path: 'docs/evidence/gallery-320.png' });
+  });
+
+  test('a desktop guide bubble does not push the footer out of view', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await seedSave(page, { collisionTipSeen: false, tips: true });
+    await page.goto('/#/play/1');
+    await ribbon(page, blockedPieceIdFor(0)).click();
+    await expect(page.locator('.guide-moment')).toBeVisible();
+    const footerBottom = await page.locator('.play-footer').evaluate((node) => {
+      return node.getBoundingClientRect().bottom;
+    });
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    expect(footerBottom).toBeLessThanOrEqual(viewportHeight + 1);
+    await expect(page.locator('.play-footer')).toBeInViewport();
+  });
+});
+
+test.describe('offline shell', () => {
+  test('loads after one visit when the network is gone', async ({ page, context }) => {
+    await seedSave(page);
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: /Arrow Slide/ })).toBeVisible();
+
+    await page.waitForFunction(
+      async () => {
+        if (!('serviceWorker' in navigator)) return false;
+        const registration = await navigator.serviceWorker.ready;
+        return registration.active !== null;
+      },
+      null,
+      { timeout: 20_000 },
+    );
+
+    // The first navigation installs the worker; reload once so the page is
+    // controlled, then cut the network and prove the shell still boots.
+    await page.reload();
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, {
+      timeout: 10_000,
+    });
+    await context.setOffline(true);
+    await page.reload();
+    await expect(page.getByRole('heading', { name: /Arrow Slide/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
+    await context.setOffline(false);
   });
 });
 

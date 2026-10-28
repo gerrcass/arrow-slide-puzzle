@@ -93,10 +93,10 @@ export function playScreen(context: AppContext, level: Level): Screen {
   back.addEventListener('click', () => context.navigate('#/levels'));
 
   const headingBlock = el('div', 'play-heading');
-  const eyebrow = el(
-    'p',
-    'eyebrow',
-    `Chapter ${chapter.numeral} · ${chapter.title}`,
+  const eyebrow = el('p', 'eyebrow');
+  eyebrow.append(
+    el('span', 'play-chapter-index', `Chapter ${chapter.numeral} · `),
+    el('span', 'play-chapter-name', chapter.title),
   );
   const heading = el('h1', 'play-title', level.title);
   heading.tabIndex = -1;
