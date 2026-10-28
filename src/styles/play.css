@@ -182,7 +182,7 @@
    * Reserve the bubble's room whether or not Nana is speaking. The board keeps
    * its position when a tip appears, so a clear never moves the next target.
    */
-  min-height: 7.5rem;
+  min-height: 8.5rem;
   padding-bottom: max(0.1rem, env(safe-area-inset-bottom));
 }
 
@@ -203,7 +203,7 @@
   }
 
   .play-screen .board-frame {
-    width: min(100%, 37.5rem, calc(100dvh - 23rem));
+    width: min(100%, 37.5rem, calc(100dvh - 24rem));
   }
 }
 
@@ -215,7 +215,7 @@
 }
 
 /* Short phones: keep the board, guide, and footer in one viewport. */
-@media (max-height: 640px) and (orientation: portrait) {
+@media (max-height: 700px) and (orientation: portrait) {
   .guide-slot {
     min-height: 5.5rem;
   }

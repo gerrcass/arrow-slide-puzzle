@@ -132,7 +132,11 @@ export function openDialog(options: DialogOptions): DialogHandle {
     dialog.querySelector<HTMLButtonElement>('[autofocus]') ??
     dialog.querySelector<HTMLButtonElement>('.dialog-actions button') ??
     dialog.querySelector<HTMLButtonElement>('.dialog-close');
-  focusTarget?.focus();
+  focusTarget?.focus({ preventScroll: true });
+  // Autofocus can scroll a tall result dialog straight to its actions. Start
+  // every dialog at the top so the title, constellation, and close stay visible.
+  dialog.scrollTop = 0;
+  panel.scrollTop = 0;
 
   return { dialog, close };
 }

@@ -493,6 +493,88 @@ test.describe('responsive', () => {
     await shot(page, 'play-320-guide.png');
   });
 
+  test('390 px keeps the board still across a tutorial bubble', async ({ page }) => {
+    await seedSave(page, { introSeen: true, tutorialDone: false, tips: true });
+    await page.goto('/#/play/1');
+    const board = page.locator('.board-frame');
+    const before = await board.boundingBox();
+    await ribbon(page, solutionFor(0)[0]!).click();
+    await page.waitForFunction(
+      () => document.querySelector('.board-svg')?.getAttribute('aria-busy') === 'false',
+      null,
+      { timeout: 7000 },
+    );
+    await expect(page.locator('.guide-moment')).toBeVisible();
+    const after = await board.boundingBox();
+    expect(Math.abs((before?.y ?? 0) - (after?.y ?? 0))).toBeLessThan(2);
+  });
+
+  test('375 x 667 keeps the play footer and every win action in view', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await seedSave(page);
+    await page.goto('/#/play/1');
+    await expect(page.locator('.play-footer')).toBeInViewport();
+    const footerBottom = await page.locator('.play-footer').evaluate((node) => {
+      return node.getBoundingClientRect().bottom;
+    });
+    expect(footerBottom).toBeLessThanOrEqual(667 + 1);
+
+    await clearLevel(page, 0);
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
+    await expect(dialog.getByRole('heading', { name: 'Tangle untangled' })).toBeInViewport();
+    const close = dialog.locator('.dialog-close');
+    await expect(close).toBeInViewport();
+    const viewportHeight = await page.evaluate(() => window.innerHeight);
+    const boxes = await dialog.locator('.dialog-actions button').evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom };
+      }),
+    );
+    expect(boxes.length).toBeGreaterThan(0);
+    for (const box of boxes) {
+      expect(box.top).toBeGreaterThanOrEqual(-1);
+      expect(box.bottom).toBeLessThanOrEqual(viewportHeight + 1);
+    }
+    await page.waitForTimeout(900);
+    await shot(page, 'win-375.png');
+  });
+
+  test('landscape keeps the result header and actions visible', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await seedSave(page);
+    await page.goto('/#/play/1');
+    await clearLevel(page, 0);
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
+
+    for (const size of [
+      { width: 844, height: 390 },
+      { width: 568, height: 320 },
+    ]) {
+      await page.setViewportSize(size);
+      await page.waitForTimeout(120);
+      const title = dialog.getByRole('heading', { name: 'Tangle untangled' });
+      await expect(title).toBeInViewport();
+      await expect(dialog.locator('.dialog-close')).toBeInViewport();
+      const viewportHeight = await page.evaluate(() => window.innerHeight);
+      const boxes = await dialog.locator('.dialog-actions button').evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const rect = node.getBoundingClientRect();
+          return { top: rect.top, bottom: rect.bottom };
+        }),
+      );
+      expect(boxes.length).toBeGreaterThan(0);
+      for (const box of boxes) {
+        expect(box.top).toBeGreaterThanOrEqual(-1);
+        expect(box.bottom).toBeLessThanOrEqual(viewportHeight + 1);
+      }
+      await page.waitForTimeout(900);
+      await shot(page, `win-landscape-${size.width}.png`);
+    }
+  });
+
   test('320 px keeps every win action in view', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await seedSave(page);
@@ -544,12 +626,41 @@ test.describe('responsive', () => {
     }));
     expect(sizes.scrollWidth).toBeLessThanOrEqual(sizes.clientWidth + 1);
     const checked = page.locator('.settings-choice:has(input:checked)').first();
-    const tick = await checked.evaluate((node) => {
-      const style = getComputedStyle(node, '::before');
-      return { content: style.content, color: style.color };
-    });
-    expect(tick.content).toContain('✓');
-    expect(tick.color).not.toBe('rgba(0, 0, 0, 0)');
+    const tick = checked.locator('.settings-choice__tick');
+    await expect(tick).toHaveText('✓');
+    const color = await tick.evaluate((node) => getComputedStyle(node).color);
+    expect(color).not.toBe('rgba(0, 0, 0, 0)');
+    await expect(page.getByRole('radio', { name: 'Reduced motion' })).toHaveAccessibleName(
+      'Reduced motion',
+    );
+  });
+});
+
+test.describe('first run on a short phone', () => {
+  test('keeps the welcome title and actions in view at 320 x 568', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play', exact: true }).click();
+    await page.locator('.level-card').first().click();
+    const welcome = page.getByRole('dialog');
+    await expect(welcome).toBeVisible();
+    await expect(welcome.getByRole('heading', { name: 'Oh, hello dear' })).toBeInViewport();
+    await expect(welcome.getByRole('button', { name: 'Show me' })).toBeInViewport();
+    await expect(welcome.getByRole('button', { name: 'Skip tutorial' })).toBeInViewport();
+  });
+});
+
+test.describe('first run in landscape', () => {
+  test('keeps the welcome title and actions in view', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Play', exact: true }).click();
+    await page.locator('.level-card').first().click();
+    const welcome = page.getByRole('dialog');
+    await expect(welcome).toBeVisible();
+    await expect(welcome.getByRole('heading', { name: 'Oh, hello dear' })).toBeInViewport();
+    await expect(welcome.getByRole('button', { name: 'Show me' })).toBeInViewport();
+    await expect(welcome.getByRole('button', { name: 'Skip tutorial' })).toBeInViewport();
   });
 });
 

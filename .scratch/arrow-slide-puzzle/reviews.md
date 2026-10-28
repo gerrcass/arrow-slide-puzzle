@@ -48,4 +48,24 @@ Two fresh reviewers checked every claimed fix, then attacked the remaining
 surface: full-campaign state, PWA update lifecycle, audio, screen-reader order,
 forced colours, CI/Pages, licensing, and test quality.
 
+### Reviewer C — verification pass
+
+All fifteen round-one items were re-checked against the current build. Fourteen
+were verified fixed; the layout item was partially fixed and surfaced three new
+release-surface defects. All were fixed:
+
+| Finding | Severity | Resolution |
+| --- | --- | --- |
+| Win/campaign dialogs overflowed at 375×667 and short landscape; autofocus scrolled the title/close off-screen | P1 | Result panels are scroll containers at every height; compact layout applies ≤700px; landscape hides decorative art/body first; focus uses `preventScroll` and resets scrollTop. E2E covers 375×667, 844×390, and 568×320, asserting title, close, and every action are visible. |
+| 390×844 guide bubble moved the board 7.1 px | P2 | Guide slot reserve raised to 8.5rem; desktop board budget reduced to match. E2E asserts <2 px movement across a tutorial beat. |
+| 375×667 play footer was below the fold | P2 | Compact guide/footer band now starts at 700px. E2E asserts the footer is in view. |
+| Radio tick leaked “✓” into every option's accessible name | P2 | Tick is now an `aria-hidden` span; E2E asserts the radio's accessible name is exactly the option label. |
+| Settings section titles were plain paragraphs | P2 | Promoted to `<h3>` for heading navigation; axe re-run at 390 and 320. |
+| Welcome dialog clipped on short phones/landscape | P1/P2 | Portrait is hidden and the panel is compact on short screens; E2E at 320×568 and 844×390 asserts title and actions in view. |
+
+Reviewer C found no P0 and recommended no-ship only for the result-dialog
+overflow, which is now covered by tests.
+
+### Reviewer D
+
 _Results appended after the round completes._

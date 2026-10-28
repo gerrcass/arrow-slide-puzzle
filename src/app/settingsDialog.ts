@@ -28,6 +28,13 @@ interface ToggleOptions {
   readonly onChange: (checked: boolean) => void;
 }
 
+function createChoiceTick(): HTMLSpanElement {
+  const tick = el('span', 'settings-choice__tick');
+  tick.setAttribute('aria-hidden', 'true');
+  tick.textContent = '✓';
+  return tick;
+}
+
 function createToggle(options: ToggleOptions): {
   readonly label: HTMLLabelElement;
   readonly input: HTMLInputElement;
@@ -53,7 +60,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
   const content = el('div', 'settings-content');
 
   const soundSection = el('section', 'settings-section');
-  soundSection.append(el('p', 'settings-section__title', 'Sound'));
+  soundSection.append(el('h3', 'settings-section__title', 'Sound'));
   const soundToggle = createToggle({
     title: 'Sound',
     hint: 'Soft synthesised slides, bumps, hearts, and a five-note win.',
@@ -64,7 +71,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
   content.append(soundSection);
 
   const motionSection = el('section', 'settings-section');
-  motionSection.append(el('p', 'settings-section__title', 'Motion'));
+  motionSection.append(el('h3', 'settings-section__title', 'Motion'));
   const fieldset = el('fieldset', 'settings-fieldset');
   fieldset.append(el('legend', 'visually-hidden', 'Motion preference'));
   for (const option of MOTION_OPTIONS) {
@@ -86,7 +93,11 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
           : `Motion set to ${option.value}.`,
       );
     });
-    label.append(input, el('span', 'settings-choice__label', option.label));
+    label.append(
+      input,
+      createChoiceTick(),
+      el('span', 'settings-choice__label', option.label),
+    );
     fieldset.append(label);
   }
   motionSection.append(fieldset);
@@ -100,7 +111,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
   content.append(motionSection);
 
   const guideSection = el('section', 'settings-section');
-  guideSection.append(el('p', 'settings-section__title', 'Nana Pearl'));
+  guideSection.append(el('h3', 'settings-section__title', 'Nana Pearl'));
   const tipsToggle = createToggle({
     title: 'Tips from Nana Pearl',
     hint: 'Short, warm notes under the board. Never over it.',
@@ -132,7 +143,11 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
         option.value === 'nana' ? 'Nana Pearl’s full voice.' : 'Brief guide copy.',
       );
     });
-    label.append(input, el('span', 'settings-choice__label', option.label));
+    label.append(
+      input,
+      createChoiceTick(),
+      el('span', 'settings-choice__label', option.label),
+    );
     voiceFieldset.append(label);
   }
   guideSection.append(voiceFieldset);
@@ -155,7 +170,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
   content.append(guideSection);
 
   const accessSection = el('section', 'settings-section');
-  accessSection.append(el('p', 'settings-section__title', 'Access'));
+  accessSection.append(el('h3', 'settings-section__title', 'Access'));
   const assistiveToggle = createToggle({
     title: 'Assistive mode',
     hint: 'Ribbon names include clear or blocked, and a describe action appears under the board.',
@@ -173,7 +188,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
   content.append(accessSection);
 
   const progressSection = el('section', 'settings-section');
-  progressSection.append(el('p', 'settings-section__title', 'Progress'));
+  progressSection.append(el('h3', 'settings-section__title', 'Progress'));
   const stats = el('div', 'settings-stats');
   const starsPill = el('span', 'pill pill--gold');
   starsPill.append(createIcon('star', 'icon icon--sm'), `${context.progress.totalStars} / 36 stars`);
@@ -254,7 +269,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
 
   // Keep the settings panel at the top on short screens; Done is still one
   // Tab away, and explicit focus here avoids starting at the bottom action.
-  soundToggle.input.focus();
+  soundToggle.input.focus({ preventScroll: true });
 
   return handle;
 }
