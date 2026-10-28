@@ -20,7 +20,7 @@
 .levels-title {
   font-family: var(--font-display);
   font-size: clamp(1.7rem, 3.6vw, 2.6rem);
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.05;
 }
@@ -142,8 +142,9 @@
 }
 
 .chapter-title {
+  font-family: var(--font-display);
   font-size: clamp(1.05rem, 2vw, 1.3rem);
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.1;
 }
@@ -253,9 +254,19 @@
 }
 
 .level-card.is-locked {
-  opacity: 0.6;
   background: rgba(15, 8, 30, 0.6);
-  filter: saturate(0.55);
+  color: var(--color-text-muted);
+  filter: saturate(0.7);
+}
+
+.level-card.is-locked .level-card__number,
+.level-card.is-locked .level-card__state,
+.level-card.is-locked .level-card__constellation {
+  color: var(--color-text-muted);
+}
+
+.level-card.is-locked .level-card__art {
+  opacity: 0.66;
 }
 
 .level-card.is-next {
@@ -301,7 +312,6 @@
   font-size: 0.55rem;
   font-weight: 800;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 

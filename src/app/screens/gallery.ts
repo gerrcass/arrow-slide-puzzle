@@ -82,8 +82,17 @@ export function galleryScreen(context: AppContext): Screen {
       surface.addEventListener('click', () => {
         context.navigate(`#/play/${card.levelNumber}`);
       });
+      const stars = card.bestStars === 1 ? '1 star' : `${card.bestStars} stars`;
+      surface.append(
+        el(
+          'span',
+          'visually-hidden',
+          `Level ${card.levelNumber}, ${name}. Best ${stars} of 3. Replay this tangle.`,
+        ),
+      );
+    } else {
+      surface.setAttribute('aria-label', cardLabel(card, name));
     }
-    surface.setAttribute('aria-label', cardLabel(card, name));
 
     const artWrap = el('div', 'gallery-card__art');
     artWrap.setAttribute('aria-hidden', 'true');
@@ -135,7 +144,16 @@ export function galleryScreen(context: AppContext): Screen {
       footer.append(lockLine);
     }
 
-    append(surface, artWrap, title, caption, footer);
+    append(
+      surface,
+      artWrap,
+      document.createTextNode(' '),
+      title,
+      document.createTextNode(' '),
+      caption,
+      document.createTextNode(' '),
+      footer,
+    );
     item.append(surface);
     grid.append(item);
   }

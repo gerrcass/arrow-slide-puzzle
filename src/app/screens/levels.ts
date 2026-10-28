@@ -16,15 +16,21 @@ function levelAriaLabel(
   isNext: boolean,
 ): string {
   const chapter = chapterFor(index);
-  const prefix = `Level ${index + 1}, ${title}, chapter ${chapter.numeral} ${chapter.title}.`;
+  const number = String(index + 1).padStart(2, '0');
+  const state = !unlocked ? 'Locked' : best > 0 ? 'Replay' : isNext ? 'Next' : 'Play';
+  const constellation = unlocked
+    ? constellationName ?? 'A constellation'
+    : 'A hidden constellation';
+  // WCAG 2.5.3: the visible words must appear, in order, inside the name.
+  const visible = `${number} ${state} ${title} ${constellation}`;
+  const prefix = `Level ${index + 1}, chapter ${chapter.numeral} ${chapter.title}.`;
   if (!unlocked) {
-    return `${prefix} A hidden constellation. Locked. Complete level ${index} to open it.`;
+    return `${prefix} ${visible}. Complete level ${index} to open it.`;
   }
-  const constellation = constellationName ? ` ${constellationName}.` : '';
   if (best > 0) {
-    return `${prefix}${constellation} Completed. Best ${best} of 3 stars. Replay.`;
+    return `${prefix} ${visible}. Completed. Best ${best} of 3 stars. Replay.`;
   }
-  return `${prefix}${constellation} ${isNext ? 'Next tangle. ' : ''}Play.`;
+  return `${prefix} ${visible}. ${isNext ? 'Next tangle. ' : ''}Play.`;
 }
 
 export function levelsScreen(context: AppContext, notice: string | null): Screen {
@@ -157,13 +163,15 @@ export function levelsScreen(context: AppContext, notice: string | null): Screen
         'level-card__number',
         String(level.index + 1).padStart(2, '0'),
       );
+      number.setAttribute('aria-hidden', 'true');
       const state = el(
         'span',
         `level-card__state ${!unlocked ? 'is-locked' : completed ? 'is-done' : isNext ? 'is-next' : ''}`,
         !unlocked ? 'Locked' : completed ? 'Replay' : isNext ? 'Next' : 'Play',
       );
+      state.setAttribute('aria-hidden', 'true');
       if (!unlocked) state.prepend(createIcon('lock', 'icon icon--sm'));
-      top.append(number, state);
+      top.append(number, document.createTextNode(' '), state);
 
       const art = el('span', 'level-card__art');
       art.setAttribute('aria-hidden', 'true');
@@ -189,7 +197,16 @@ export function levelsScreen(context: AppContext, notice: string | null): Screen
       stars.classList.add('level-card__stars');
       stars.setAttribute('aria-hidden', 'true');
 
-      append(card, top, art, title, constellationName, stars);
+      append(
+        card,
+        top,
+        art,
+        document.createTextNode(' '),
+        title,
+        document.createTextNode(' '),
+        constellationName,
+        stars,
+      );
       if (unlocked) {
         card.addEventListener('click', () => {
           context.navigate(`#/play/${level.index + 1}`);
