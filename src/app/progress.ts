@@ -1,18 +1,22 @@
 import type { MotionSetting } from './motion';
 import type { StorageAdapter } from './storage';
 
-export const SAVE_VERSION = 1 as const;
+export const SAVE_VERSION = 2 as const;
 export const SAVE_KEY = 'nana-pearl-arrow-slide.save';
+
+export type GuideVoice = 'nana' | 'brief';
 
 export interface Settings {
   readonly sound: boolean;
   readonly motion: MotionSetting;
   readonly assistive: boolean;
   readonly tips: boolean;
+  readonly guideVoice: GuideVoice;
 }
 
 export interface TutorialFlags {
   readonly introSeen: boolean;
+  readonly tutorialDone: boolean;
   readonly collisionTipSeen: boolean;
   readonly heartsTipSeen: boolean;
   readonly winTipSeen: boolean;
@@ -41,12 +45,14 @@ export function defaultSettings(): Settings {
     motion: 'system',
     assistive: false,
     tips: true,
+    guideVoice: 'nana',
   };
 }
 
 export function defaultTutorial(): TutorialFlags {
   return {
     introSeen: false,
+    tutorialDone: false,
     collisionTipSeen: false,
     heartsTipSeen: false,
     winTipSeen: false,
@@ -74,6 +80,10 @@ export function isStar(value: unknown): value is 1 | 2 | 3 {
 
 function isMotionSetting(value: unknown): value is MotionSetting {
   return value === 'system' || value === 'reduced' || value === 'full';
+}
+
+function isGuideVoice(value: unknown): value is GuideVoice {
+  return value === 'nana' || value === 'brief';
 }
 
 function isLevelKey(value: string): boolean {
@@ -111,23 +121,27 @@ function parseSettings(value: unknown): Settings | null {
   if (!isMotionSetting(value.motion)) return null;
   if (typeof value.assistive !== 'boolean') return null;
   if (typeof value.tips !== 'boolean') return null;
+  if (!isGuideVoice(value.guideVoice)) return null;
   return {
     sound: value.sound,
     motion: value.motion,
     assistive: value.assistive,
     tips: value.tips,
+    guideVoice: value.guideVoice,
   };
 }
 
 function parseTutorial(value: unknown): TutorialFlags | null {
   if (!isRecord(value)) return null;
   const introSeen = value.introSeen;
+  const tutorialDone = value.tutorialDone;
   const collisionTipSeen = value.collisionTipSeen;
   const heartsTipSeen = value.heartsTipSeen;
   const winTipSeen = value.winTipSeen;
   const hintTipSeen = value.hintTipSeen;
   if (
     typeof introSeen !== 'boolean' ||
+    typeof tutorialDone !== 'boolean' ||
     typeof collisionTipSeen !== 'boolean' ||
     typeof heartsTipSeen !== 'boolean' ||
     typeof winTipSeen !== 'boolean' ||
@@ -137,6 +151,7 @@ function parseTutorial(value: unknown): TutorialFlags | null {
   }
   return {
     introSeen,
+    tutorialDone,
     collisionTipSeen,
     heartsTipSeen,
     winTipSeen,
@@ -145,13 +160,27 @@ function parseTutorial(value: unknown): TutorialFlags | null {
 }
 
 /**
- * Version is the migration gate. Version 1 is the only shipped schema; a
- * future or unknown version is discarded rather than half-read.
+ * Version is the migration gate. Version 1 shipped before the guide settings
+ * and tutorialDone flag; both are added with safe defaults before parsing.
  */
 function migrate(value: unknown): Record<string, unknown> | null {
   if (!isRecord(value)) return null;
-  if (value.version !== SAVE_VERSION) return null;
-  return value;
+  if (value.version === SAVE_VERSION) return value;
+  if (value.version === 1) {
+    const tutorial = isRecord(value.tutorial)
+      ? { ...value.tutorial, tutorialDone: false }
+      : value.tutorial;
+    const settings = isRecord(value.settings)
+      ? { ...value.settings, guideVoice: 'nana' }
+      : value.settings;
+    return {
+      ...value,
+      version: SAVE_VERSION,
+      tutorial,
+      settings,
+    };
+  }
+  return null;
 }
 
 export function parseSaveText(text: string | null, levelCount: number): SaveData {
@@ -390,6 +419,15 @@ export class ProgressStore {
 
   markTutorial(flag: TutorialFlag): void {
     this.update((save) => markTutorial(save, flag));
+  }
+
+  /** Replays the first-run card and three beats without touching level stars. */
+  resetTutorial(): void {
+    this.update((save) => ({
+      ...save,
+      tutorial: defaultTutorial(),
+      settings: { ...save.settings, tips: true },
+    }));
   }
 
   reset(): void {

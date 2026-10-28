@@ -5,6 +5,7 @@ import {
   systemPrefersReducedMotion,
   type MotionSetting,
 } from './motion';
+import type { GuideVoice } from './progress';
 import { el } from './ui/dom';
 import { openDialog, type DialogHandle } from './ui/dialog';
 import { createIcon } from './ui/icons';
@@ -13,6 +14,11 @@ const MOTION_OPTIONS: readonly { value: MotionSetting; label: string }[] = [
   { value: 'system', label: 'Follow device' },
   { value: 'full', label: 'Full motion' },
   { value: 'reduced', label: 'Reduced motion' },
+];
+
+const VOICE_OPTIONS: readonly { value: GuideVoice; label: string }[] = [
+  { value: 'nana', label: 'Nana’s voice' },
+  { value: 'brief', label: 'Brief' },
 ];
 
 export function openSettingsDialog(context: AppContext): DialogHandle {
@@ -54,6 +60,68 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
     ),
   );
   content.append(motionSection);
+
+  const guideSection = el('section', 'settings-section');
+  guideSection.append(el('p', 'settings-section__title', 'Nana Pearl'));
+  const tipsLabel = el('label', 'settings-toggle');
+  const tipsInput = el('input');
+  tipsInput.type = 'checkbox';
+  tipsInput.checked = save.settings.tips;
+  const tipsTrack = el('span', 'settings-toggle__track');
+  tipsTrack.setAttribute('aria-hidden', 'true');
+  const tipsCopy = el('span', 'settings-toggle__copy');
+  tipsCopy.append(
+    el('span', 'settings-toggle__title', 'Tips from Nana Pearl'),
+    el('span', 'settings-toggle__hint', 'Short, warm notes under the board. Never over it.'),
+  );
+  tipsLabel.append(tipsInput, tipsTrack, tipsCopy);
+  tipsInput.addEventListener('change', () => {
+    context.progress.setSettings({ tips: tipsInput.checked });
+    context.announce(
+      tipsInput.checked
+        ? 'Nana Pearl’s tips are on.'
+        : 'Nana Pearl’s tips are off. The board stays the same.',
+    );
+  });
+  guideSection.append(tipsLabel);
+
+  const voiceFieldset = el('fieldset', 'settings-fieldset');
+  voiceFieldset.append(el('legend', 'settings-fieldset__legend', 'Guide copy'));
+  for (const option of VOICE_OPTIONS) {
+    const label = el('label', 'settings-choice');
+    const input = el('input');
+    input.type = 'radio';
+    input.name = 'guideVoice';
+    input.value = option.value;
+    input.checked = save.settings.guideVoice === option.value;
+    input.addEventListener('change', () => {
+      if (!input.checked) return;
+      context.progress.setSettings({ guideVoice: option.value });
+      context.announce(
+        option.value === 'nana' ? 'Nana Pearl’s full voice.' : 'Brief guide copy.',
+      );
+    });
+    label.append(input, document.createTextNode(option.label));
+    voiceFieldset.append(label);
+  }
+  guideSection.append(voiceFieldset);
+
+  const replayNote = el(
+    'p',
+    'settings-note',
+    'Replays the welcome card and three tutorial beats on level one. Stars and collected constellations stay.',
+  );
+  const replay = el('button', 'btn btn--secondary');
+  replay.type = 'button';
+  replay.append(createIcon('sparkle', 'icon icon--sm'), 'Replay tutorial');
+  replay.addEventListener('click', () => {
+    context.progress.resetTutorial();
+    context.announce('The tutorial will start again on level one.');
+    handle?.close();
+    context.navigate('#/play/1');
+  });
+  guideSection.append(replay, replayNote);
+  content.append(guideSection);
 
   const progressSection = el('section', 'settings-section');
   progressSection.append(el('p', 'settings-section__title', 'Progress'));
@@ -130,6 +198,10 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
       },
     ],
   });
+
+  // Keep the settings panel at the top on short screens; Done is still one
+  // Tab away, and explicit focus here avoids starting at the bottom action.
+  fieldset.querySelector<HTMLInputElement>('input')?.focus();
 
   return handle;
 }

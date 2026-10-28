@@ -7,8 +7,9 @@ off the board; a blocked ribbon bumps and costs one heart. Three hearts, up to
 three stars, and a constellation waiting underneath every tangle.
 
 **Status:** the core loop, twelve-level campaign, level select, stars, unlocks,
-and local-first progress are in place. The constellation reveal, Nana Pearl’s
-guide, sound, assistive mode, and offline PWA arrive in later tickets. See
+local-first progress, progressive constellation reveals with a gallery, and
+Nana Pearl’s tutorial and contextual guide are in place. Sound, assistive
+mode, and the offline PWA arrive in later tickets. See
 `.scratch/arrow-slide-puzzle/spec.md` for the full product and `docs/adr/` for
 the decisions.
 
@@ -18,7 +19,7 @@ the decisions.
 npm install
 npm run dev             # Vite dev server
 npm run typecheck       # strict TypeScript
-npm run test            # Vitest: engine, solver, content, progress
+npm run test            # Vitest: engine, solver, content, progress, guide
 npm run build           # production build
 npm run preview         # serve the production build
 npm run levels:generate # regenerate the twelve committed levels

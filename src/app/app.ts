@@ -108,9 +108,10 @@ export class App {
     );
   }
 
-  private openSettings(): void {
-    if (document.querySelector('dialog[open]')) return;
+  private openSettings(): DialogHandle | null {
+    if (document.querySelector('dialog[open]')) return null;
     this.settingsDialog = openSettingsDialog(this.context);
+    return this.settingsDialog;
   }
 
   private render(): void {

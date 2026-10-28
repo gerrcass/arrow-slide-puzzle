@@ -140,6 +140,57 @@
   padding-block: clamp(0.15rem, 1.2vh, 0.6rem);
 }
 
+.play-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: clamp(0.45rem, 1.2vh, 0.8rem);
+  min-height: 0;
+}
+
+.guide-slot {
+  display: flex;
+  flex: none;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  min-height: 6.9rem;
+  padding-bottom: max(0.1rem, env(safe-area-inset-bottom));
+}
+
+.guide-slot .guide-moment {
+  max-width: 42rem;
+}
+
+@media (min-width: 980px) {
+  .play-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 19rem;
+    align-items: center;
+    gap: clamp(1rem, 3vw, 2.5rem);
+  }
+
+  .board-stage {
+    flex: none;
+    height: 100%;
+  }
+
+  .guide-slot {
+    align-items: center;
+    min-height: 0;
+    padding-bottom: 0;
+  }
+
+  .guide-slot .guide-moment {
+    align-items: flex-start;
+  }
+
+  .guide-slot .guide-moment__portrait {
+    width: 3.6rem;
+    margin-top: 0.15rem;
+  }
+}
+
 .play-footer {
   display: flex;
   flex-direction: column;

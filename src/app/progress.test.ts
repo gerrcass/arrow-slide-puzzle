@@ -34,7 +34,9 @@ describe('save schema', () => {
     expect(save.version).toBe(SAVE_VERSION);
     expect(save.levels).toEqual({});
     expect(save.settings.motion).toBe('system');
+    expect(save.settings.guideVoice).toBe('nana');
     expect(save.tutorial.introSeen).toBe(false);
+    expect(save.tutorial.tutorialDone).toBe(false);
     expect(save.lastPlayed).toBeNull();
     expect(isLevelUnlocked(save, 0, LEVEL_COUNT)).toBe(true);
     expect(isLevelUnlocked(save, 1, LEVEL_COUNT)).toBe(false);
@@ -49,7 +51,9 @@ describe('save schema', () => {
     store.recordCompletion(1, 2, SECOND);
     store.setLastPlayed(2);
     store.setSettings({ motion: 'reduced', assistive: true });
+    store.setSettings({ guideVoice: 'brief' });
     store.markTutorial('introSeen');
+    store.markTutorial('tutorialDone');
 
     const reloaded = new ProgressStore(storage, LEVEL_COUNT);
     expect(reloaded.bestStars(0)).toBe(3);
@@ -57,7 +61,9 @@ describe('save schema', () => {
     expect(reloaded.data.lastPlayed).toBe(2);
     expect(reloaded.data.settings.motion).toBe('reduced');
     expect(reloaded.data.settings.assistive).toBe(true);
+    expect(reloaded.data.settings.guideVoice).toBe('brief');
     expect(reloaded.data.tutorial.introSeen).toBe(true);
+    expect(reloaded.data.tutorial.tutorialDone).toBe(true);
     expect(reloaded.totalStars).toBe(5);
     expect(reloaded.completedCount).toBe(2);
   });
@@ -146,6 +152,20 @@ describe('saved progress store', () => {
     expect(store.isUnlocked(1)).toBe(false);
   });
 
+  it('replays the tutorial without erasing stars', () => {
+    const { store } = storeWith();
+    store.recordCompletion(0, 3, FIRST);
+    store.setSettings({ tips: false });
+    store.markTutorial('introSeen');
+    store.markTutorial('tutorialDone');
+    store.resetTutorial();
+
+    expect(store.bestStars(0)).toBe(3);
+    expect(store.data.settings.tips).toBe(true);
+    expect(store.data.tutorial.introSeen).toBe(false);
+    expect(store.data.tutorial.tutorialDone).toBe(false);
+  });
+
   it('falls back to a default save on corrupt JSON', () => {
     const { store } = storeWith({ [SAVE_KEY]: '{ not json' });
     expect(store.bestStars(0)).toBe(0);
@@ -160,7 +180,6 @@ describe('saved progress store', () => {
     const { store } = storeWith({ [SAVE_KEY]: wrong });
     expect(store.data).toEqual(defaultSave());
   });
-
   it('discards malformed entries rather than half-reading them', () => {
     const save = defaultSave();
     const malformed = JSON.stringify({
@@ -218,7 +237,39 @@ describe('saved progress store', () => {
     const current = JSON.stringify(defaultSave());
     expect(parseSaveText(current, LEVEL_COUNT)).toEqual(defaultSave());
     expect(parseSaveText(null, LEVEL_COUNT)).toEqual(defaultSave());
-    const future = JSON.stringify({ ...defaultSave(), version: 2 });
+    const future = JSON.stringify({ ...defaultSave(), version: 3 });
     expect(parseSaveText(future, LEVEL_COUNT)).toEqual(defaultSave());
+  });
+
+  it('migrates a version 1 save with guide defaults intact', () => {
+    const v1 = JSON.stringify({
+      version: 1,
+      levels: {
+        '0': { bestStars: 2, completedAt: FIRST },
+      },
+      settings: {
+        sound: false,
+        motion: 'reduced',
+        assistive: true,
+        tips: false,
+      },
+      tutorial: {
+        introSeen: true,
+        collisionTipSeen: true,
+        heartsTipSeen: false,
+        winTipSeen: false,
+        hintTipSeen: false,
+      },
+      lastPlayed: 0,
+    });
+
+    const save = parseSaveText(v1, LEVEL_COUNT);
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.levels['0']?.bestStars).toBe(2);
+    expect(save.settings.sound).toBe(false);
+    expect(save.settings.guideVoice).toBe('nana');
+    expect(save.tutorial.introSeen).toBe(true);
+    expect(save.tutorial.tutorialDone).toBe(false);
+    expect(save.tutorial.collisionTipSeen).toBe(true);
   });
 });

@@ -253,6 +253,19 @@
   height: 0.8rem;
 }
 
+.win-visual--with-guide {
+  gap: var(--space-2);
+}
+
+.win-visual--with-guide .constellation--win {
+  width: 8.8rem;
+  height: 8.8rem;
+}
+
+.win-visual--with-guide .win-constellation__caption {
+  display: none;
+}
+
 .star-row {
   display: flex;
   align-items: center;
@@ -301,6 +314,8 @@
 }
 
 .dialog--settings .dialog-panel {
+  max-height: min(92dvh, 48rem);
+  overflow-y: auto;
   text-align: left;
 }
 
@@ -382,6 +397,89 @@
   line-height: 1.55;
 }
 
+.settings-fieldset__legend {
+  margin-bottom: 0.4rem;
+  color: var(--color-text-dim);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 2.75rem;
+  cursor: pointer;
+}
+
+.settings-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-toggle__track {
+  position: relative;
+  width: 2.85rem;
+  height: 1.65rem;
+  flex: none;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 245, 255, 0.06);
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
+}
+
+.settings-toggle__track::after {
+  content: "";
+  position: absolute;
+  top: 0.18rem;
+  left: 0.2rem;
+  width: 1.16rem;
+  height: 1.16rem;
+  border-radius: 50%;
+  background: var(--color-text-dim);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) ease;
+}
+
+.settings-toggle:has(input:checked) .settings-toggle__track {
+  border-color: rgba(255, 210, 122, 0.5);
+  background: rgba(255, 210, 122, 0.16);
+}
+
+.settings-toggle:has(input:checked) .settings-toggle__track::after {
+  background: var(--color-gold);
+  transform: translateX(1.18rem);
+}
+
+.settings-toggle:has(input:focus-visible) .settings-toggle__track {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.settings-toggle__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.settings-toggle__title {
+  font-size: var(--text-sm);
+  font-weight: 750;
+}
+
+.settings-toggle__hint {
+  color: var(--color-text-dim);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
 .settings-stats {
   display: flex;
   flex-wrap: wrap;
@@ -435,6 +533,26 @@
   }
 }
 
+@media (max-width: 380px) {
+  .dialog--settings .dialog-panel {
+    padding: 1.1rem;
+  }
+
+  .dialog--settings .settings-section {
+    gap: 0.55rem;
+    margin-top: 0.85rem;
+    padding-top: 0.75rem;
+  }
+
+  .dialog--settings .settings-actions {
+    margin-top: 0.2rem;
+  }
+
+  .dialog--settings .dialog-actions {
+    margin-top: 0.75rem;
+  }
+}
+
 @media (max-height: 620px) {
   .dialog {
     max-height: 94dvh;
@@ -482,6 +600,14 @@
     min-height: 2.2rem;
     padding: 0.4rem 0.7rem;
     font-size: 0.78rem;
+  }
+
+  .dialog--settings .settings-toggle {
+    min-height: 2.2rem;
+  }
+
+  .dialog--settings .settings-toggle__hint {
+    display: none;
   }
 
   .dialog--settings .dialog-actions {

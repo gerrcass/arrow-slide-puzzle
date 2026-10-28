@@ -10,12 +10,12 @@ export interface DialogAction {
 
 export interface DialogOptions {
   readonly variant: 'win' | 'loss' | 'campaign' | 'confirm' | 'settings' | 'info';
-  readonly eyebrow?: string;
+  readonly eyebrow?: string | undefined;
   readonly title: string;
-  readonly body?: string;
+  readonly body?: string | undefined;
   readonly actions: readonly DialogAction[];
-  readonly content?: Node;
-  readonly onCancel?: () => void;
+  readonly content?: Node | undefined;
+  readonly onCancel?: (() => void) | undefined;
   readonly dismissible?: boolean;
   readonly icon?: 'heart' | 'star' | 'check' | 'moon';
 }

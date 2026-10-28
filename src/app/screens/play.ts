@@ -11,6 +11,23 @@ import {
   type Attempt,
 } from '../../engine/session';
 import type { AppContext, Screen } from '../context';
+import {
+  createGuideState,
+  guideBubbleCopy,
+  guideDismiss,
+  guideFlagsToPersist,
+  guideMomentCopy,
+  guideOnClear,
+  guideOnCollision,
+  guideOnLoss,
+  guideOnWin,
+  guideSetTips,
+  guideShowIntro,
+  guideSkipIntro,
+  guideWithVoice,
+  welcomeCopy,
+  type GuideState,
+} from '../guide';
 import { BoardView } from '../ui/boardView';
 import { createConstellationArt } from '../ui/constellation';
 import {
@@ -23,6 +40,7 @@ import {
   type DialogAction,
   type DialogHandle,
 } from '../ui/dialog';
+import { createGuideMoment, createNanaPortrait } from '../ui/nana';
 import { ribbonColourName } from '../ui/ribbonPalette';
 import { createHeartRow, createStarRow } from '../ui/stars';
 
@@ -46,6 +64,14 @@ export function playScreen(context: AppContext, level: Level): Screen {
   const total = level.board.pieces.length;
 
   let attempt: Attempt = startAttempt(level.board);
+  let guide: GuideState = createGuideState(
+    context.progress.data.tutorial,
+    {
+      tips: context.progress.data.settings.tips,
+      voice: context.progress.data.settings.guideVoice,
+    },
+    { firstLevel: level.index === 0 },
+  );
   let disposed = false;
   let activeDialog: DialogHandle | null = null;
   const timers = new Set<number>();
@@ -81,7 +107,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
   settingsButton.type = 'button';
   settingsButton.setAttribute('aria-label', 'Settings');
   settingsButton.append(createIcon('settings'));
-  settingsButton.addEventListener('click', () => context.openSettings());
+  settingsButton.addEventListener('click', openPlaySettings);
   append(tools, tanglePill, settingsButton);
 
   append(header, back, headingBlock, tools);
@@ -124,6 +150,11 @@ export function playScreen(context: AppContext, level: Level): Screen {
   });
   stage.append(boardView.element);
 
+  const guideSlot = el('aside', 'guide-slot');
+  guideSlot.setAttribute('aria-label', 'Nana Pearl’s guidance');
+  const playBody = el('div', 'play-body');
+  append(playBody, stage, guideSlot);
+
   const footer = el('footer', 'play-footer');
   const actions = el('div', 'play-actions');
   const hintButton = el('button', 'btn btn--secondary');
@@ -141,13 +172,17 @@ export function playScreen(context: AppContext, level: Level): Screen {
   keyHint.append(el('kbd', 'key', 'H'), ' hint', el('span', 'key-hint__dot', '·'), el('kbd', 'key', 'R'), ' reset');
   append(footer, actions, keyHint);
 
-  append(screen, header, status, instructions, stage, footer);
+  append(screen, header, status, instructions, playBody, footer);
   document.title = `${level.title} · Nana Pearl’s Arrow Slide Puzzle`;
 
   boardView.render(attempt);
   renderHud();
   updateControls();
+  renderGuide(false);
   context.progress.setLastPlayed(level.index);
+  queueMicrotask(() => {
+    if (!disposed) showWelcome();
+  });
 
   const onKeyDown = (event: KeyboardEvent): void => {
     if (event.defaultPrevented) return;
@@ -173,7 +208,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
     } else if (key === 'escape') {
       if (attempt.status === 'idle') {
         event.preventDefault();
-        context.openSettings();
+        openPlaySettings();
       }
     }
   };
@@ -201,6 +236,102 @@ export function playScreen(context: AppContext, level: Level): Screen {
     hintButton.disabled = !idle || hintFor(attempt) === null;
     resetButton.disabled = !idle;
     settingsButton.disabled = !idle;
+  }
+
+  function applyGuide(next: GuideState): void {
+    const before = guide;
+    guide = next;
+    for (const flag of guideFlagsToPersist(before.flags, next.flags)) {
+      context.progress.markTutorial(flag);
+    }
+  }
+
+  function renderGuide(announce = true): void {
+    if (disposed) return;
+    guideSlot.replaceChildren();
+    const bubble = guide.bubble;
+    guideSlot.classList.toggle('has-guide', bubble !== null && guide.tipsEnabled);
+    if (!bubble || !guide.tipsEnabled) return;
+    const text = guideBubbleCopy(guide);
+    guideSlot.append(
+      createGuideMoment({
+        expression: bubble.expression,
+        text,
+        className: 'guide-moment--play',
+        onDismiss: dismissGuide,
+      }),
+    );
+    if (announce) context.announce(`Nana Pearl: ${text}`);
+  }
+
+  function dismissGuide(): void {
+    if (!guide.bubble) return;
+    applyGuide(guideDismiss(guide));
+    renderGuide(false);
+    heading.focus({ preventScroll: true });
+  }
+
+  function syncGuideSettings(): void {
+    const settings = context.progress.data.settings;
+    applyGuide(guideSetTips(guide, settings.tips));
+    applyGuide(guideWithVoice(guide, settings.guideVoice));
+    renderGuide(false);
+  }
+
+  function openPlaySettings(): void {
+    if (disposed) return;
+    const handle = context.openSettings();
+    if (!handle) return;
+    handle.dialog.addEventListener(
+      'close',
+      () => {
+        if (!disposed) syncGuideSettings();
+      },
+      { once: true },
+    );
+  }
+
+  function showWelcome(): void {
+    if (disposed || !guide.introOpen) return;
+    const copy = welcomeCopy(guide.voice);
+    const content = el('div', 'guide-welcome');
+    content.append(
+      createNanaPortrait('warm', 'nana-portrait nana-portrait--welcome'),
+    );
+
+    const skip = (): void => {
+      activeDialog = null;
+      applyGuide(guideSkipIntro(guide));
+      renderGuide(false);
+      heading.focus({ preventScroll: true });
+    };
+
+    activeDialog = openDialog({
+      variant: 'info',
+      eyebrow: 'Nana Pearl',
+      title: copy.title,
+      body: copy.body,
+      content,
+      actions: [
+        {
+          label: copy.showLabel,
+          variant: 'primary',
+          autofocus: true,
+          onSelect: () => {
+            activeDialog = null;
+            applyGuide(guideShowIntro(guide));
+            renderGuide();
+            boardView.focusFirst();
+          },
+        },
+        {
+          label: copy.skipLabel,
+          variant: 'secondary',
+          onSelect: skip,
+        },
+      ],
+      onCancel: skip,
+    });
   }
 
   function breakHeart(): void {
@@ -244,6 +375,8 @@ export function playScreen(context: AppContext, level: Level): Screen {
         'assertive',
       );
       if (previousHearts > attempt.hearts) breakHeart();
+      applyGuide(guideOnCollision(guide, attempt.hearts));
+      renderGuide();
     } else {
       context.announce(
         `Cleared the ${ribbonColourName(resolution.piece.color)} ribbon. ${attempt.cleared.length} of ${total} cleared.`,
@@ -252,13 +385,23 @@ export function playScreen(context: AppContext, level: Level): Screen {
 
     void boardView
       .animateResolution(resolution, reduced)
-      .then(() => afterResolution(wasFocused, resolution.kind === 'slide' ? pieceId : null))
+      .then(() =>
+        afterResolution(
+          wasFocused,
+          resolution.kind === 'slide' ? pieceId : null,
+          resolution.kind === 'slide',
+        ),
+      )
       .catch(() => {
         // A cancelled animation during navigation is not a game error.
       });
   }
 
-  function afterResolution(wasFocused: boolean, clearedId: string | null): void {
+  function afterResolution(
+    wasFocused: boolean,
+    clearedId: string | null,
+    wasSlide: boolean,
+  ): void {
     if (disposed) return;
     const settled = settleAttempt(attempt);
     attempt = settled.attempt;
@@ -269,8 +412,15 @@ export function playScreen(context: AppContext, level: Level): Screen {
 
     if (wasFocused && clearedId) boardView.focusNextAfter(clearedId);
 
+    if (wasSlide) {
+      applyGuide(guideOnClear(guide, attempt.cleared.length));
+      if (attempt.status !== 'won') renderGuide();
+    }
+
     for (const event of settled.events) {
       if (event.type === 'won') {
+        applyGuide(guideOnWin(guide));
+        renderGuide(false);
         const previousBest = context.progress.bestStars(level.index);
         context.progress.recordCompletion(level.index, starCount(event.stars));
         const best = context.progress.bestStars(level.index);
@@ -278,6 +428,8 @@ export function playScreen(context: AppContext, level: Level): Screen {
         return;
       }
       if (event.type === 'lost') {
+        applyGuide(guideOnLoss(guide));
+        renderGuide(false);
         showLoss();
         return;
       }
@@ -385,6 +537,19 @@ export function playScreen(context: AppContext, level: Level): Screen {
     );
     visual.append(bestLine);
 
+    const moment = guide.moment;
+    if (moment) {
+      visual.classList.add('win-visual--with-guide');
+      visual.append(
+        createGuideMoment({
+          expression: moment.expression,
+          text: guideMomentCopy(guide),
+          className: 'guide-moment--dialog',
+          dismissible: false,
+        }),
+      );
+    }
+
     const nextLevel = LEVELS[level.index + 1];
     const actions: DialogAction[] = [];
     if (nextLevel) {
@@ -427,9 +592,11 @@ export function playScreen(context: AppContext, level: Level): Screen {
       variant: nextLevel ? 'win' : 'campaign',
       eyebrow: nextLevel ? 'A ribbon leaves, a star appears' : 'Campaign complete',
       title: nextLevel ? 'Tangle untangled' : 'The sky is clear',
-      body: nextLevel
-        ? `You kept ${stars} ${plural(stars, 'heart')}. The next tangle is waiting.`
-        : 'Every ribbon has left the board. The whole sky belongs to you now.',
+      body: moment
+        ? undefined
+        : nextLevel
+          ? `You kept ${stars} ${plural(stars, 'heart')}. The next tangle is waiting.`
+          : 'Every ribbon has left the board. The whole sky belongs to you now.',
       content: visual,
       actions,
       onCancel: () => context.navigate('#/levels'),
@@ -439,6 +606,19 @@ export function playScreen(context: AppContext, level: Level): Screen {
   function showLoss(): void {
     if (disposed) return;
     context.announce('Out of hearts. Try again.', 'assertive');
+    const moment = guide.moment;
+    let content: HTMLDivElement | undefined;
+    if (moment) {
+      content = el('div', 'win-visual win-visual--with-guide');
+      content.append(
+        createGuideMoment({
+          expression: moment.expression,
+          text: guideMomentCopy(guide),
+          className: 'guide-moment--dialog',
+          dismissible: false,
+        }),
+      );
+    }
     const actions: DialogAction[] = [
       {
         label: 'Try again',
@@ -456,8 +636,11 @@ export function playScreen(context: AppContext, level: Level): Screen {
       variant: 'loss',
       eyebrow: 'The tangle held',
       title: 'Out of hearts',
-      body: 'Nothing is lost. Take a breath, then look for the ribbon that can slide all the way out.',
+      body: moment
+        ? undefined
+        : 'Nothing is lost. Take a breath, then look for the ribbon that can slide all the way out.',
       icon: 'heart',
+      content,
       actions,
       onCancel: restart,
     });
