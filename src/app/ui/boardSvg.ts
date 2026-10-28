@@ -126,19 +126,22 @@ function appendDefs(svg: SVGSVGElement, board: Board, uid: string, accent: Ribbo
 
   defs.append(surface, glow, accentGlow);
 
-  const colours = new Set<RibbonColor>(board.pieces.map((piece) => piece.color));
-  for (const colour of colours) {
-    const paint = RIBBON_PAINT[colour];
+  for (const piece of board.pieces) {
+    const paint = RIBBON_PAINT[piece.color];
+    const ys = piece.path.map((cell) => cell.y);
+    const minY = Math.min(...ys) + 0.5;
+    const maxY = Math.max(...ys) + 0.5;
     const gradient = svgEl('linearGradient', {
-      id: `${uid}-grad-${colour}`,
+      id: `${uid}-piece-${piece.id}`,
+      gradientUnits: 'userSpaceOnUse',
       x1: '0',
-      y1: '0',
+      y1: (minY - 0.32).toFixed(3),
       x2: '0',
-      y2: '1',
+      y2: (maxY + 0.32).toFixed(3),
     });
     gradient.append(
       svgEl('stop', { offset: '0%', 'stop-color': paint.light }),
-      svgEl('stop', { offset: '38%', 'stop-color': paint.base }),
+      svgEl('stop', { offset: '44%', 'stop-color': paint.base }),
       svgEl('stop', { offset: '100%', 'stop-color': paint.dark }),
     );
     defs.append(gradient);
@@ -288,7 +291,7 @@ function appendPiece(
     svgPath(d, {
       class: 'ribbon-main',
       fill: 'none',
-      stroke: `url(#${uid}-grad-${piece.color})`,
+      stroke: `url(#${uid}-piece-${piece.id})`,
       'stroke-width': '0.58',
       'stroke-linecap': 'round',
       'stroke-linejoin': 'round',
@@ -297,11 +300,11 @@ function appendPiece(
       class: 'ribbon-sheen',
       fill: 'none',
       stroke: paint.light,
-      'stroke-width': '0.15',
+      'stroke-width': '0.14',
       'stroke-linecap': 'round',
       'stroke-linejoin': 'round',
       transform: 'translate(0 -0.065)',
-      opacity: '0.34',
+      opacity: '0.42',
     }),
   );
 
@@ -313,7 +316,7 @@ function appendPiece(
           cx: String(first.x),
           cy: String(first.y),
           r: '0.2',
-          fill: `url(#${uid}-grad-${piece.color})`,
+          fill: `url(#${uid}-piece-${piece.id})`,
         }),
       );
     }
@@ -325,7 +328,7 @@ function appendPiece(
       svgEl('polygon', {
         class: 'ribbon-arrow',
         points: pointsAttribute(arrow),
-        fill: `url(#${uid}-grad-${piece.color})`,
+        fill: `url(#${uid}-piece-${piece.id})`,
         stroke: paint.edge,
         'stroke-width': '0.055',
         'stroke-linejoin': 'round',
