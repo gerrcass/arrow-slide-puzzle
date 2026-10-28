@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { chainBoard, makeBoard, makePiece } from './fixtures';
 import {
   clearedCount,
+  clearPieces,
   hintFor,
   resetAttempt,
   settleAttempt,
@@ -155,6 +156,12 @@ describe('attempt lifecycle', () => {
     expect(hinted?.id).toBe('front');
     expect(attempt.remaining).toHaveLength(2);
     expect(attempt.hearts).toBe(3);
+  });
+
+  it('lists every clear ribbon in board order for assistive mode', () => {
+    const attempt = startAttempt(chainBoard());
+    expect(clearPieces(attempt).map((piece) => piece.id)).toEqual(['front']);
+    expect(clearPieces(tapRibbon(attempt, 'front').attempt)).toEqual([]);
   });
 
   it('hint returns null while resolving or after the attempt ends', () => {

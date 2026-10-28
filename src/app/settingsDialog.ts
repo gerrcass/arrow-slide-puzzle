@@ -21,9 +21,47 @@ const VOICE_OPTIONS: readonly { value: GuideVoice; label: string }[] = [
   { value: 'brief', label: 'Brief' },
 ];
 
+interface ToggleOptions {
+  readonly title: string;
+  readonly hint: string;
+  readonly checked: boolean;
+  readonly onChange: (checked: boolean) => void;
+}
+
+function createToggle(options: ToggleOptions): {
+  readonly label: HTMLLabelElement;
+  readonly input: HTMLInputElement;
+} {
+  const label = el('label', 'settings-toggle');
+  const input = el('input');
+  input.type = 'checkbox';
+  input.checked = options.checked;
+  const track = el('span', 'settings-toggle__track');
+  track.setAttribute('aria-hidden', 'true');
+  const copy = el('span', 'settings-toggle__copy');
+  copy.append(
+    el('span', 'settings-toggle__title', options.title),
+    el('span', 'settings-toggle__hint', options.hint),
+  );
+  label.append(input, track, copy);
+  input.addEventListener('change', () => options.onChange(input.checked));
+  return { label, input };
+}
+
 export function openSettingsDialog(context: AppContext): DialogHandle {
   const save = context.progress.data;
   const content = el('div', 'settings-content');
+
+  const soundSection = el('section', 'settings-section');
+  soundSection.append(el('p', 'settings-section__title', 'Sound'));
+  const soundToggle = createToggle({
+    title: 'Sound',
+    hint: 'Soft synthesised slides, bumps, hearts, and a five-note win.',
+    checked: save.settings.sound,
+    onChange: (checked) => context.setSound(checked),
+  });
+  soundSection.append(soundToggle.label);
+  content.append(soundSection);
 
   const motionSection = el('section', 'settings-section');
   motionSection.append(el('p', 'settings-section__title', 'Motion'));
@@ -63,27 +101,20 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
 
   const guideSection = el('section', 'settings-section');
   guideSection.append(el('p', 'settings-section__title', 'Nana Pearl'));
-  const tipsLabel = el('label', 'settings-toggle');
-  const tipsInput = el('input');
-  tipsInput.type = 'checkbox';
-  tipsInput.checked = save.settings.tips;
-  const tipsTrack = el('span', 'settings-toggle__track');
-  tipsTrack.setAttribute('aria-hidden', 'true');
-  const tipsCopy = el('span', 'settings-toggle__copy');
-  tipsCopy.append(
-    el('span', 'settings-toggle__title', 'Tips from Nana Pearl'),
-    el('span', 'settings-toggle__hint', 'Short, warm notes under the board. Never over it.'),
-  );
-  tipsLabel.append(tipsInput, tipsTrack, tipsCopy);
-  tipsInput.addEventListener('change', () => {
-    context.progress.setSettings({ tips: tipsInput.checked });
-    context.announce(
-      tipsInput.checked
-        ? 'Nana Pearl’s tips are on.'
-        : 'Nana Pearl’s tips are off. The board stays the same.',
-    );
+  const tipsToggle = createToggle({
+    title: 'Tips from Nana Pearl',
+    hint: 'Short, warm notes under the board. Never over it.',
+    checked: save.settings.tips,
+    onChange: (checked) => {
+      context.progress.setSettings({ tips: checked });
+      context.announce(
+        checked
+          ? 'Nana Pearl’s tips are on.'
+          : 'Nana Pearl’s tips are off. The board stays the same.',
+      );
+    },
   });
-  guideSection.append(tipsLabel);
+  guideSection.append(tipsToggle.label);
 
   const voiceFieldset = el('fieldset', 'settings-fieldset');
   voiceFieldset.append(el('legend', 'settings-fieldset__legend', 'Guide copy'));
@@ -122,6 +153,24 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
   });
   guideSection.append(replay, replayNote);
   content.append(guideSection);
+
+  const accessSection = el('section', 'settings-section');
+  accessSection.append(el('p', 'settings-section__title', 'Access'));
+  const assistiveToggle = createToggle({
+    title: 'Assistive mode',
+    hint: 'Ribbon names include clear or blocked, and a describe action appears under the board.',
+    checked: save.settings.assistive,
+    onChange: (checked) => {
+      context.progress.setSettings({ assistive: checked });
+      context.announce(
+        checked
+          ? 'Assistive mode on. Ribbon names now say clear or blocked.'
+          : 'Assistive mode off. Ribbon names keep the colour, cells, and heading.',
+      );
+    },
+  });
+  accessSection.append(assistiveToggle.label);
+  content.append(accessSection);
 
   const progressSection = el('section', 'settings-section');
   progressSection.append(el('p', 'settings-section__title', 'Progress'));
@@ -168,6 +217,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
 
     if (disarmTimer !== null) window.clearTimeout(disarmTimer);
     context.progress.reset();
+    context.audio.setEnabled(context.progress.data.settings.sound);
     applyMotionAttribute(
       resolveReducedMotion(
         context.progress.data.settings.motion,
@@ -201,7 +251,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
 
   // Keep the settings panel at the top on short screens; Done is still one
   // Tab away, and explicit focus here avoids starting at the bottom action.
-  fieldset.querySelector<HTMLInputElement>('input')?.focus();
+  soundToggle.input.focus();
 
   return handle;
 }

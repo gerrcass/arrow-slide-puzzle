@@ -3,6 +3,7 @@ import { LEVELS } from '../../content/levels';
 import { chapterFor, type Level } from '../../content/schema';
 import {
   clearedCount,
+  clearPieces,
   hintFor,
   resetAttempt,
   settleAttempt,
@@ -29,6 +30,7 @@ import {
   type GuideState,
 } from '../guide';
 import { BoardView } from '../ui/boardView';
+import { describePiece } from '../ui/boardSvg';
 import { createConstellationArt } from '../ui/constellation';
 import {
   append,
@@ -80,6 +82,9 @@ export function playScreen(context: AppContext, level: Level): Screen {
 
   const screen = el('main', 'screen play-screen');
 
+  const skip = el('a', 'skip-link', 'Skip to the board');
+  skip.href = '#tangle-board';
+
   const header = el('header', 'play-header');
   const back = el('button', 'icon-button play-back');
   back.type = 'button';
@@ -104,14 +109,21 @@ export function playScreen(context: AppContext, level: Level): Screen {
     createIcon('sparkle', 'icon icon--sm'),
     `Tangle ${String(level.index + 1).padStart(2, '0')}`,
   );
+  const soundButton = el('button', 'icon-button play-sound');
+  soundButton.type = 'button';
+  soundButton.addEventListener('click', () => {
+    context.setSound(!context.progress.data.settings.sound);
+    syncSoundButton();
+  });
   const settingsButton = el('button', 'icon-button play-settings');
   settingsButton.type = 'button';
   settingsButton.setAttribute('aria-label', 'Settings');
   settingsButton.append(createIcon('settings'));
   settingsButton.addEventListener('click', openPlaySettings);
-  append(tools, tanglePill, settingsButton);
+  append(tools, tanglePill, soundButton, settingsButton);
 
   append(header, back, headingBlock, tools);
+  syncSoundButton();
 
   const status = el('div', 'play-status');
   const hearts = createHeartRow(attempt.hearts);
@@ -142,11 +154,15 @@ export function playScreen(context: AppContext, level: Level): Screen {
   instructions.id = instructionsId;
 
   const stage = el('div', 'board-stage');
+  stage.id = 'tangle-board';
+  stage.tabIndex = -1;
+  stage.setAttribute('aria-label', 'Tangle board');
   const boardView = new BoardView(level.board, {
     seed: level.seed,
     accent: chapter.accent,
     describedBy: instructionsId,
     constellation: constellation ?? undefined,
+    assistive: context.progress.data.settings.assistive,
     onActivate: (pieceId) => handleTap(pieceId),
   });
   stage.append(boardView.element);
@@ -163,17 +179,27 @@ export function playScreen(context: AppContext, level: Level): Screen {
   hintButton.append(createIcon('hint'), 'Hint');
   hintButton.addEventListener('click', showHint);
 
+  const describeButton = el('button', 'btn btn--ghost describe-clears');
+  describeButton.type = 'button';
+  describeButton.setAttribute('aria-label', 'Describe clear ribbons');
+  describeButton.append(
+    createIcon('describe'),
+    el('span', 'describe-clears__label', 'Describe'),
+  );
+  describeButton.addEventListener('click', describeClearRibbons);
+  describeButton.hidden = !context.progress.data.settings.assistive;
+
   const resetButton = el('button', 'btn btn--ghost');
   resetButton.type = 'button';
   resetButton.append(createIcon('reset'), 'Reset');
   resetButton.addEventListener('click', requestReset);
-  append(actions, hintButton, resetButton);
+  append(actions, hintButton, describeButton, resetButton);
 
   const keyHint = el('p', 'key-hint');
   keyHint.append(el('kbd', 'key', 'H'), ' hint', el('span', 'key-hint__dot', '·'), el('kbd', 'key', 'R'), ' reset');
   append(footer, actions, keyHint);
 
-  append(screen, header, status, instructions, playBody, footer);
+  append(screen, skip, header, status, instructions, playBody, footer);
   document.title = `${level.title} · Nana Pearl’s Arrow Slide Puzzle`;
 
   boardView.render(attempt);
@@ -235,8 +261,17 @@ export function playScreen(context: AppContext, level: Level): Screen {
   function updateControls(): void {
     const idle = attempt.status === 'idle';
     hintButton.disabled = !idle || hintFor(attempt) === null;
+    describeButton.disabled = !idle;
     resetButton.disabled = !idle;
     settingsButton.disabled = !idle;
+  }
+
+  function syncSoundButton(): void {
+    const soundOn = context.progress.data.settings.sound;
+    soundButton.replaceChildren(createIcon(soundOn ? 'sound' : 'mute'));
+    soundButton.setAttribute('aria-label', 'Mute sound');
+    soundButton.setAttribute('aria-pressed', String(!soundOn));
+    soundButton.classList.toggle('is-muted', !soundOn);
   }
 
   function applyGuide(next: GuideState): void {
@@ -276,6 +311,10 @@ export function playScreen(context: AppContext, level: Level): Screen {
     const settings = context.progress.data.settings;
     applyGuide(guideSetTips(guide, settings.tips));
     applyGuide(guideWithVoice(guide, settings.guideVoice));
+    boardView.setAssistive(settings.assistive);
+    describeButton.hidden = !settings.assistive;
+    syncSoundButton();
+    updateControls();
     renderGuide(false);
   }
 
@@ -371,6 +410,8 @@ export function playScreen(context: AppContext, level: Level): Screen {
       const blocker = attempt.remaining.find((piece) => piece.id === resolution.blockerId);
       const blockerName = blocker ? ribbonColourName(blocker.color) : 'another';
       const heartsLeft = attempt.hearts;
+      context.audio.play('bump');
+      context.audio.play('heart');
       context.announce(
         `Blocked by the ${blockerName} ribbon. ${heartsLeft} ${plural(heartsLeft, 'heart')} left.`,
         'assertive',
@@ -379,6 +420,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
       applyGuide(guideOnCollision(guide, attempt.hearts));
       renderGuide();
     } else {
+      context.audio.play('slide', { steps: resolution.steps });
       context.announce(
         `Cleared the ${ribbonColourName(resolution.piece.color)} ribbon. ${attempt.cleared.length} of ${total} cleared.`,
       );
@@ -442,11 +484,7 @@ export function playScreen(context: AppContext, level: Level): Screen {
     previousBest: number,
     best: number,
   ): Promise<void> {
-    context.announce(
-      constellation
-        ? `The last ribbon leaves. ${constellation.name} is coming into view.`
-        : 'The last ribbon leaves. The frost clears.',
-    );
+    context.audio.play('win');
     await boardView.revealBoard(context.isReducedMotion());
     if (disposed) return;
     showWin(stars, previousBest, best);
@@ -459,9 +497,23 @@ export function playScreen(context: AppContext, level: Level): Screen {
       context.announce('No ribbon is clear. That should not happen — try resetting.', 'assertive');
       return;
     }
+    context.audio.play('tick');
     boardView.pulseHint(piece.id);
     context.announce(
       `Try the ${ribbonColourName(piece.color)} ribbon. It is clear, pointing ${piece.heading}.`,
+    );
+  }
+
+  function describeClearRibbons(): void {
+    if (disposed || attempt.status !== 'idle') return;
+    const pieces = clearPieces(attempt);
+    if (pieces.length === 0) {
+      context.announce('No clear ribbons. That should not happen — try resetting.', 'assertive');
+      return;
+    }
+    const names = pieces.map((piece) => describePiece(piece));
+    context.announce(
+      `${pieces.length === 1 ? 'One clear ribbon' : `${pieces.length} clear ribbons`}: ${names.join(' ')}`,
     );
   }
 
@@ -513,7 +565,12 @@ export function playScreen(context: AppContext, level: Level): Screen {
 
   function showWin(stars: number, previousBest: number, best: number): void {
     if (disposed) return;
-    context.announce(`Tangle cleared with ${stars} ${plural(stars, 'star')}.`, 'assertive');
+    context.announce(
+      constellation
+        ? `Tangle cleared with ${stars} ${plural(stars, 'star')}. ${constellation.name} is in your gallery.`
+        : `Tangle cleared with ${stars} ${plural(stars, 'star')}.`,
+      'assertive',
+    );
 
     const visual = el('div', 'win-visual');
     if (constellation) {
@@ -537,9 +594,11 @@ export function playScreen(context: AppContext, level: Level): Screen {
         : `Best stays at ${best} of 3 stars`,
     );
     visual.append(bestLine);
-    const burst = createStarBurst();
-    burst.classList.add('star-burst--win');
-    visual.append(burst);
+    if (!context.isReducedMotion()) {
+      const burst = createStarBurst();
+      burst.classList.add('star-burst--win');
+      visual.append(burst);
+    }
 
     const moment = guide.moment;
     if (moment) {

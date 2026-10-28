@@ -656,10 +656,15 @@ export function createBoardArt(board: Board, options: BoardArtOptions): BoardArt
   };
 }
 
-export function describePiece(piece: Piece): string {
+export function describePiece(
+  piece: Piece,
+  state: 'clear' | 'blocked' | null = null,
+): string {
   const paint = RIBBON_PAINT[piece.color];
   const cells = piece.path.length === 1 ? '1 cell' : `${piece.path.length} cells`;
-  return `${capitalise(paint.name)} ribbon, ${cells}, pointing ${piece.heading}.`;
+  const base = `${capitalise(paint.name)} ribbon, ${cells}, pointing ${piece.heading}.`;
+  if (state === null) return base;
+  return `${base} ${state === 'clear' ? 'Clear' : 'Blocked'}.`;
 }
 
 export function capitalise(value: string): string {

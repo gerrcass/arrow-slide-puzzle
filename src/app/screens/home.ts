@@ -18,10 +18,19 @@ export function homeScreen(context: AppContext): Screen {
   navPill.append(createIcon('star', 'icon icon--sm'), 'A twilight puzzle');
   const gallery = el('button', 'btn btn--ghost home-gallery');
   gallery.type = 'button';
-  gallery.append(createIcon('gallery', 'icon icon--sm'), 'Gallery');
+  gallery.setAttribute('aria-label', 'Open the constellation gallery');
+  gallery.append(
+    createIcon('gallery', 'icon icon--sm'),
+    el('span', 'home-gallery__label', 'Gallery'),
+  );
   gallery.addEventListener('click', () => context.navigate('#/gallery'));
+  const settings = el('button', 'icon-button home-settings');
+  settings.type = 'button';
+  settings.setAttribute('aria-label', 'Settings');
+  settings.append(createIcon('settings'));
+  settings.addEventListener('click', () => context.openSettings());
   const navActions = el('div', 'home-nav__actions');
-  append(navActions, gallery, navPill);
+  append(navActions, gallery, settings, navPill);
   nav.append(brand, navActions);
 
   const hero = el('section', 'home-hero');

@@ -2,8 +2,8 @@
   color-scheme: dark;
 
   /* Typography */
-  --font-display: ui-rounded, "SF Pro Rounded", "Nunito", "Quicksand",
-    "Trebuchet MS", system-ui, sans-serif;
+  --font-display: "Fredoka", "Fredoka Fallback", ui-rounded, "SF Pro Rounded",
+    "Nunito", "Quicksand", "Trebuchet MS", system-ui, sans-serif;
   --font-body: ui-rounded, "SF Pro Rounded", "Nunito", "Quicksand",
     "Trebuchet MS", system-ui, sans-serif;
 
@@ -34,6 +34,7 @@
   --color-rose: #ff9fc4;
   --color-heart: #ff7fa8;
   --color-mint: #9ff0cf;
+  --color-aqua: #9ff0cf;
   --color-sky: #9fd8ff;
   --color-lilac: #c8a7ff;
   --color-focus: #fff0b8;

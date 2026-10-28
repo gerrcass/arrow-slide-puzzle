@@ -73,12 +73,43 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
+  box-shadow: 0 0 0 6px rgba(7, 3, 15, 0.72);
+}
+
+[hidden] {
+  display: none !important;
 }
 
 [data-screen-heading]:focus {
   outline: none;
+  box-shadow: none;
+}
+
+.skip-link {
+  position: fixed;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: max(0.75rem, env(safe-area-inset-left));
+  z-index: calc(var(--z-live) + 1);
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.65rem 1rem;
+  border: 2px solid var(--color-plum);
+  border-radius: var(--radius-pill);
+  background: var(--color-cream);
+  color: var(--color-plum);
+  font-size: var(--text-sm);
+  font-weight: 800;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  outline-color: var(--color-focus);
+  transform: translateY(0);
 }
 
 ::selection {
@@ -111,10 +142,10 @@ a {
   width: min(100%, 74rem);
   min-height: 100dvh;
   margin: 0 auto;
-  padding:
-    max(var(--space-5), env(safe-area-inset-top))
-    clamp(var(--space-3), 4vw, var(--space-6))
-    max(var(--space-5), env(safe-area-inset-bottom));
+  padding-top: max(var(--space-5), env(safe-area-inset-top));
+  padding-bottom: max(var(--space-5), env(safe-area-inset-bottom));
+  padding-left: max(clamp(0.6rem, 3.6vw, var(--space-6)), env(safe-area-inset-left));
+  padding-right: max(clamp(0.6rem, 3.6vw, var(--space-6)), env(safe-area-inset-right));
   display: flex;
   flex-direction: column;
 }
@@ -230,7 +261,7 @@ a {
 }
 
 .btn:disabled {
-  opacity: 0.42;
+  opacity: 0.58;
 }
 
 .btn--wide {
@@ -245,7 +276,7 @@ a {
   flex: none;
   border: 1px solid var(--color-border);
   border-radius: 50%;
-  background: rgba(255, 245, 255, 0.055);
+  background: rgba(255, 245, 255, 0.065);
   color: var(--color-text-muted);
   transition:
     color var(--duration-fast) ease,
@@ -266,7 +297,7 @@ a {
 }
 
 .icon-button:disabled {
-  opacity: 0.4;
+  opacity: 0.55;
   transform: none;
 }
 

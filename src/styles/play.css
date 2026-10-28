@@ -15,19 +15,31 @@
   gap: 0.45rem;
 }
 
+.play-sound {
+  color: var(--color-text-muted);
+}
+
+.play-sound.is-muted {
+  color: var(--color-text-dim);
+}
+
 .play-heading {
   min-width: 0;
 }
 
 .play-heading .eyebrow {
+  overflow: hidden;
   font-size: 0.64rem;
   letter-spacing: 0.15em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .play-title {
   overflow: hidden;
+  font-family: var(--font-display);
   font-size: clamp(1.2rem, 2.2vw, 1.55rem);
-  font-weight: 850;
+  font-weight: 700;
   letter-spacing: -0.025em;
   line-height: 1.18;
   text-overflow: ellipsis;
@@ -135,17 +147,29 @@
 .board-stage {
   display: grid;
   flex: 1;
+  width: 100%;
   place-items: center;
   min-height: 0;
   padding-block: clamp(0.15rem, 1.2vh, 0.6rem);
+}
+
+.board-stage:focus {
+  outline: none;
+}
+
+.board-stage:focus-visible .board-frame {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 5px;
 }
 
 .play-body {
   display: flex;
   flex: 1;
   flex-direction: column;
+  align-items: center;
   gap: clamp(0.45rem, 1.2vh, 0.8rem);
   min-height: 0;
+  width: 100%;
 }
 
 .guide-slot {
@@ -154,7 +178,7 @@
   align-items: flex-end;
   justify-content: center;
   width: 100%;
-  min-height: 6.9rem;
+  min-height: 0;
   padding-bottom: max(0.1rem, env(safe-area-inset-bottom));
 }
 
@@ -163,26 +187,8 @@
 }
 
 @media (min-width: 980px) {
-  .play-body {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 19rem;
-    align-items: center;
-    gap: clamp(1rem, 3vw, 2.5rem);
-  }
-
-  .board-stage {
-    flex: none;
-    height: 100%;
-  }
-
   .guide-slot {
-    align-items: center;
     min-height: 0;
-    padding-bottom: 0;
-  }
-
-  .guide-slot .guide-moment {
-    align-items: flex-start;
   }
 
   .guide-slot .guide-moment__portrait {
@@ -201,12 +207,18 @@
 
 .play-actions {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: center;
   gap: 0.55rem;
 }
 
 .play-actions .btn {
   min-width: 6.6rem;
+}
+
+.describe-clears {
+  --btn-color: var(--color-lilac);
 }
 
 .key-hint {
@@ -285,11 +297,15 @@
 
 @media (max-width: 380px) {
   .play-heading .eyebrow {
-    font-size: 0.58rem;
+    display: none;
   }
 
   .play-title {
     font-size: 1.08rem;
+  }
+
+  .play-tools {
+    gap: 0.3rem;
   }
 
   .heart-slot .icon {
@@ -302,7 +318,7 @@
   }
 
   .progress-track {
-    width: 3.4rem;
+    width: 3rem;
   }
 
   .play-actions {
@@ -311,6 +327,6 @@
 
   .play-actions .btn {
     min-width: 5.5rem;
-    padding-inline: 0.9rem;
+    padding-inline: 0.8rem;
   }
 }

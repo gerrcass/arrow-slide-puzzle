@@ -1,4 +1,5 @@
 import type { Constellation } from '../../content/schema';
+import { clearanceFor } from '../../engine/clearance';
 import { HEADING_VECTORS } from '../../engine/geometry';
 import type { Attempt, Resolution } from '../../engine/session';
 import type { Board, Piece, RibbonColor } from '../../engine/types';
@@ -11,6 +12,7 @@ export interface BoardViewOptions {
   readonly accent?: RibbonColor;
   readonly describedBy?: string;
   readonly constellation?: Constellation | undefined;
+  readonly assistive?: boolean;
   readonly onActivate: (pieceId: string) => void;
 }
 
@@ -39,10 +41,13 @@ export class BoardView {
   private locked = false;
   private destroyed = false;
   private revealComplete = false;
+  private assistive: boolean;
+  private lastAttempt: Attempt | null = null;
 
   constructor(board: Board, options: BoardViewOptions) {
     this.board = board;
     this.onActivate = options.onActivate;
+    this.assistive = options.assistive ?? false;
     const art = createBoardArt(board, {
       seed: options.seed,
       interactive: true,
@@ -95,6 +100,7 @@ export class BoardView {
 
   render(attempt: Attempt): void {
     if (this.destroyed) return;
+    this.lastAttempt = attempt;
     const remaining = new Set(attempt.remaining.map((piece) => piece.id));
     for (const piece of this.board.pieces) {
       const group = this.groups.get(piece.id);
@@ -107,17 +113,38 @@ export class BoardView {
           group.style.opacity = '';
           group.classList.remove('is-sliding', 'is-hinted', 'is-blocker', 'is-colliding');
         }
-        group.setAttribute('aria-label', describePiece(piece));
-        group.setAttribute(
-          'aria-disabled',
-          attempt.status === 'idle' ? 'false' : 'true',
-        );
+        group.setAttribute('aria-disabled', attempt.status === 'idle' ? 'false' : 'true');
       } else {
         group.style.display = 'none';
       }
     }
 
+    this.updateLabels(attempt.remaining);
     this.setLocked(attempt.status !== 'idle');
+  }
+
+  /** Toggling assistive mode updates names without disturbing the board. */
+  setAssistive(assistive: boolean): void {
+    if (this.assistive === assistive) return;
+    this.assistive = assistive;
+    this.updateLabels(this.lastAttempt?.remaining ?? this.board.pieces);
+  }
+
+  private updateLabels(remaining: readonly Piece[]): void {
+    for (const piece of remaining) {
+      const group = this.groups.get(piece.id);
+      if (!group) continue;
+      let state: 'clear' | 'blocked' | null = null;
+      if (this.assistive) {
+        const others = remaining.filter((candidate) => candidate.id !== piece.id);
+        state =
+          clearanceFor(piece, others, this.board.width, this.board.height).kind ===
+          'clear'
+            ? 'clear'
+            : 'blocked';
+      }
+      group.setAttribute('aria-label', describePiece(piece, state));
+    }
   }
 
   setLocked(locked: boolean): void {
@@ -249,6 +276,7 @@ export class BoardView {
       return;
     }
 
+    this.element.classList.add('is-revealing');
     const frostAnimation = this.frost.animate(
       [{ opacity: 1 }, { opacity: 0 }],
       { duration: 620, easing: 'ease-out', fill: 'forwards' },
@@ -307,6 +335,7 @@ export class BoardView {
     );
 
     if (this.destroyed) return;
+    this.element.classList.remove('is-revealing');
     this.frost.style.display = 'none';
     this.constellationArt.classList.add('is-revealed');
     for (const line of this.constellationLines) {
@@ -373,7 +402,7 @@ export class BoardView {
           { opacity: 1 },
           { opacity: 0 },
         ],
-        { duration: 120, easing: 'ease-out', fill: 'forwards' },
+        { duration: 90, easing: 'ease-out', fill: 'forwards' },
       );
       await Promise.all([this.finished(animation), reveal]);
       group.style.display = 'none';
@@ -433,9 +462,9 @@ export class BoardView {
     }
 
     if (reduced) {
-      group.classList.add('is-colliding');
-      this.schedule(() => group.classList.remove('is-colliding'), 360);
-      await wait(220);
+      group.classList.add('is-bumped');
+      this.schedule(() => group.classList.remove('is-bumped'), 210);
+      await wait(150);
       return;
     }
 

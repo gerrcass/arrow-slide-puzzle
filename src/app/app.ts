@@ -1,4 +1,5 @@
 import { LEVELS } from '../content/levels';
+import { createAudioEngine } from './audio';
 import type { AppContext, Screen } from './context';
 import {
   applyMotionAttribute,
@@ -22,6 +23,7 @@ export class App {
   private readonly assertiveRegion: HTMLElement;
   private readonly context: AppContext;
   private readonly mediaQuery: MediaQueryList | null;
+  private readonly audio: ReturnType<typeof createAudioEngine>;
   private currentScreen: Screen | null = null;
   private settingsDialog: DialogHandle | null = null;
   private politeTimer: number | null = null;
@@ -32,6 +34,7 @@ export class App {
     this.progress = progress;
     this.root.classList.add('app');
     this.root.replaceChildren();
+    this.audio = createAudioEngine(() => this.progress.data.settings.sound);
 
     const ambient = el('div', 'ambient');
     ambient.setAttribute('aria-hidden', 'true');
@@ -51,8 +54,10 @@ export class App {
 
     this.context = {
       progress: this.progress,
+      audio: this.audio,
       navigate: (hash) => this.navigate(hash),
       announce: (message, priority = 'polite') => this.announce(message, priority),
+      setSound: (enabled) => this.setSound(enabled),
       openSettings: () => this.openSettings(),
       isReducedMotion: () =>
         resolveReducedMotion(
@@ -67,6 +72,12 @@ export class App {
         : null;
     this.applyMotion();
     this.mediaQuery?.addEventListener('change', () => this.applyMotion());
+
+    const unlock = (): void => {
+      this.audio.unlock();
+    };
+    window.addEventListener('pointerdown', unlock, { capture: true, once: true });
+    window.addEventListener('keydown', unlock, { capture: true, once: true });
   }
 
   start(): void {
@@ -82,10 +93,8 @@ export class App {
     window.location.hash = hash;
   }
 
-  announce(message: string, priority: 'polite' | 'assertive'): void {
+  announce(message: string, priority: 'polite' | 'assertive' = 'polite'): void {
     const region = priority === 'assertive' ? this.assertiveRegion : this.politeRegion;
-    const other = priority === 'assertive' ? this.politeRegion : this.assertiveRegion;
-    other.textContent = '';
     region.textContent = '';
     const timer = window.setTimeout(() => {
       region.textContent = message;
@@ -97,6 +106,17 @@ export class App {
       if (this.politeTimer !== null) window.clearTimeout(this.politeTimer);
       this.politeTimer = timer;
     }
+  }
+
+  setSound(enabled: boolean): void {
+    if (this.progress.data.settings.sound === enabled) return;
+    this.progress.setSettings({ sound: enabled });
+    this.audio.setEnabled(enabled);
+    if (enabled) {
+      this.audio.unlock();
+      this.audio.play('tick');
+    }
+    this.announce(enabled ? 'Sound on.' : 'Sound muted.');
   }
 
   private applyMotion(): void {

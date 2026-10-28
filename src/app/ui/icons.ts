@@ -15,7 +15,10 @@ export type IconName =
   | 'check'
   | 'moon'
   | 'sparkle'
-  | 'gallery';
+  | 'gallery'
+  | 'sound'
+  | 'mute'
+  | 'describe';
 
 const STROKE = {
   fill: 'none',
@@ -96,6 +99,18 @@ function lineIcon(name: IconName, svg: SVGSVGElement): void {
       );
       path('M8 16.2 11.2 12l2.5 3 2-2.2 3.3 4.4');
       path('M15.8 9.4c.2 1.4 1 2.2 2.4 2.4-1.4.2-2.2 1-2.4 2.4-.2-1.4-1-2.2-2.4-2.4 1.4-.2 2.2-1 2.4-2.4Z');
+      break;
+    case 'sound':
+      path('M5 9.5h3.2L13 5.8v12.4l-4.8-3.7H5Z');
+      path('M16 9.2a4 4 0 0 1 0 5.6M18.4 6.8a7.4 7.4 0 0 1 0 10.4');
+      break;
+    case 'mute':
+      path('M5 9.5h3.2L13 5.8v12.4l-4.8-3.7H5Z');
+      path('M16.2 9.6l4.6 4.8M20.8 9.6l-4.6 4.8');
+      break;
+    case 'describe':
+      path('M4.5 6.5h15M4.5 12h9.5M4.5 17.5h6.5');
+      path('M18 13.2c.3 2.3 1.3 3.3 3.6 3.6-2.3.3-3.3 1.3-3.6 3.6-.3-2.3-1.3-3.3-3.6-3.6 2.3-.3 3.3-1.3 3.6-3.6Z');
       break;
     case 'heart':
     case 'star':

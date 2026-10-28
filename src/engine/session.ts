@@ -165,6 +165,18 @@ export function hintFor(attempt: Attempt): Piece | null {
   return null;
 }
 
+/** Every ribbon that can slide clear right now, in board order. */
+export function clearPieces(attempt: Attempt): readonly Piece[] {
+  if (attempt.status !== 'idle') return [];
+  return attempt.remaining.filter((piece) => {
+    const others = attempt.remaining.filter((candidate) => candidate.id !== piece.id);
+    return (
+      clearanceFor(piece, others, attempt.board.width, attempt.board.height).kind ===
+      'clear'
+    );
+  });
+}
+
 export function starsFor(attempt: Attempt): number {
   return attempt.status === 'won' ? attempt.hearts : 0;
 }

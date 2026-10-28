@@ -35,6 +35,8 @@ describe('save schema', () => {
     expect(save.levels).toEqual({});
     expect(save.settings.motion).toBe('system');
     expect(save.settings.guideVoice).toBe('nana');
+    expect(save.settings.sound).toBe(true);
+    expect(save.settings.assistive).toBe(false);
     expect(save.tutorial.introSeen).toBe(false);
     expect(save.tutorial.tutorialDone).toBe(false);
     expect(save.lastPlayed).toBeNull();
