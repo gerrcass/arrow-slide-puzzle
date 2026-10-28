@@ -29,7 +29,7 @@ const BLUEPRINTS: readonly Blueprint[] = [
   { index: 8, title: 'Ninefold Knot', constellationId: 'the-knot', seed: 912000, targetPieces: 12 },
   { index: 9, title: 'Sable Crown', constellationId: 'the-crown', seed: 913000, targetPieces: 13 },
   { index: 10, title: 'Glass Orchard', constellationId: 'the-orchard', seed: 915000, targetPieces: 15 },
-  { index: 11, title: 'Nana’s Sky', constellationId: 'nanas-sky', seed: 916000, targetPieces: 16 },
+  { index: 11, title: 'The Last Light', constellationId: 'nanas-sky', seed: 916000, targetPieces: 16 },
 ];
 
 function generateBlueprint(blueprint: Blueprint): Board {

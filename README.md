@@ -104,7 +104,7 @@ The rules engine has no DOM, storage, clock, or randomness. The renderer animate
 
 The site uses relative asset paths and hash routing, so it works from the `/arrow-slide-puzzle/` project subpath with no server rewrites. A small service worker precaches the shell and hashed assets; the offline path is covered by an end-to-end test.
 
-Local production Lighthouse (mobile): **100 performance, 100 accessibility, 100 best practices, 100 SEO**, LCP 0.8 s, CLS 0, re-run after the final layout pass. See [`docs/evidence/lighthouse.md`](docs/evidence/lighthouse.md).
+Local production Lighthouse (mobile): **100 performance, 100 accessibility, 100 best practices, 100 SEO**, LCP 1.1 s, CLS 0, re-run after the final layout pass. See [`docs/evidence/lighthouse.md`](docs/evidence/lighthouse.md).
 
 ## Credits
 

@@ -72,9 +72,13 @@ documented exceptions at the time of writing.
 | 390 × 844 portrait | 50 px | 44 px | 39 px |
 | 320 × 568 portrait | 34 px | 30 px | 26 px |
 | 844 × 390 landscape | 50 px | 43 px | 39 px |
+| 667 × 375 landscape | 47 px | 41 px | 36 px |
+| 320 × 320 reflow (stacked) | 33 px | 29 px | 26 px |
 
 All values exceed the WCAG 2.2 AA **Target Size (Minimum)** of 24 × 24 px. The
 44 px project target is met by buttons and by ribbons on the gentler boards; the
 densest boards are deliberately capped at a one-cell halo so adjacent ribbons do
 not steal taps. Those boards offer the full ribbon length as a target, keyboard
-play, and assistive mode as the alternative route required by the exception.
+play, and assistive mode as the alternative route required by the exception. At
+a 400% browser zoom (about 360×225 CSS px) the play screen stacks and allows
+vertical scrolling; the board keeps a 240 px floor instead of collapsing.

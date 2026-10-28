@@ -115,6 +115,7 @@
   position: relative;
   margin-bottom: var(--space-2);
   padding-inline: 1.5rem;
+  pointer-events: none;
 }
 
 .dialog-title {
@@ -221,6 +222,16 @@
 .constellation--board {
   display: block;
   pointer-events: none;
+}
+
+/*
+ * A veiled card shows only the silhouette. If the line work or stars were left
+ * visible, the level-select preview would solve the reveal before the tangle.
+ */
+.constellation--muted .constellation-lines,
+.constellation--muted .constellation-stars,
+.constellation--muted .constellation-orbit {
+  display: none;
 }
 
 /*

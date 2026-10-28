@@ -393,17 +393,20 @@ export function createSpeechBubble(options: SpeechBubbleOptions): HTMLDivElement
   const head = el('div', 'guide-bubble__head');
   const name = el('span', 'guide-bubble__name', options.name ?? 'Nana Pearl');
   head.append(name, el('span', 'guide-bubble__rule', '·'));
+
+  const text = el('p', 'guide-bubble__text', options.text);
+  bubble.append(head, text);
+
   if (options.dismissible !== false) {
+    // The dismiss control lives outside the head so compact layouts can hide
+    // the name without hiding the only way to close the bubble.
     const dismiss = el('button', 'guide-bubble__dismiss');
     dismiss.type = 'button';
     dismiss.setAttribute('aria-label', 'Dismiss Nana Pearl’s tip');
     dismiss.append(createIcon('close'));
     dismiss.addEventListener('click', () => options.onDismiss?.());
-    head.append(dismiss);
+    bubble.append(dismiss);
   }
-
-  const text = el('p', 'guide-bubble__text', options.text);
-  bubble.append(head, text);
   return bubble;
 }
 

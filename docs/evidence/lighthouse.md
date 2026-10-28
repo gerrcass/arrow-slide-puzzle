@@ -12,7 +12,7 @@
 | Best practices | **100** |
 | SEO | **100** |
 
-Core metrics: LCP **0.8 s**, CLS **0**, TBT **20 ms**.
+Core metrics: LCP **1.1 s**, CLS **0**, TBT **10 ms**.
 
 Command:
 

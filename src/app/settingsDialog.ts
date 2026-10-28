@@ -267,8 +267,7 @@ export function openSettingsDialog(context: AppContext): DialogHandle {
     ],
   });
 
-  // Keep the settings panel at the top on short screens; Done is still one
-  // Tab away, and explicit focus here avoids starting at the bottom action.
+  // Start at the top control; the focus trap keeps Done reachable by Tab.
   soundToggle.input.focus({ preventScroll: true });
 
   return handle;

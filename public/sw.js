@@ -7,7 +7,9 @@
  */
 
 const CACHE_PREFIX = 'nana-pearl-shell-';
-const CACHE = `${CACHE_PREFIX}v1`;
+// Replaced with the build timestamp by vite.config.ts at build time.
+const CACHE_VERSION = '__CACHE_VERSION__';
+const CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 const ROOT = new URL('./', self.registration.scope);
 
 function assetUrlsFromHtml(html) {
@@ -108,9 +110,9 @@ self.addEventListener('fetch', (event) => {
         .catch(async () => {
           const cache = await caches.open(CACHE);
           return (
-            (await cache.match(request)) ??
-            (await cache.match(new URL('./index.html', ROOT).href)) ??
-            (await cache.match(ROOT.href)) ??
+            (await cache.match(request, { ignoreVary: true })) ??
+            (await cache.match(new URL('./index.html', ROOT).href, { ignoreVary: true })) ??
+            (await cache.match(ROOT.href, { ignoreVary: true })) ??
             new Response('Offline', { status: 503, headers: { 'content-type': 'text/plain' } })
           );
         }),
@@ -120,7 +122,7 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.open(CACHE).then(async (cache) => {
-      const cached = await cache.match(request);
+      const cached = await cache.match(request, { ignoreVary: true });
       if (cached) return cached;
       const response = await fetch(request);
       if (response.ok) await cache.put(request, response.clone());

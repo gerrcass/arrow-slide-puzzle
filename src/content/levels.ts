@@ -826,7 +826,7 @@ const LEVEL_SPECS: readonly LevelSpec[] = [
   },
   {
     index: 11,
-    title: "Nana’s Sky",
+    title: "The Last Light",
     constellationId: "nanas-sky",
     seed: 916000,
     board: {

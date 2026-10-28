@@ -46,6 +46,7 @@ export function createConstellationArt(
   });
   svg.style.setProperty('--constellation-accent', paint.base);
   svg.style.setProperty('--constellation-light', paint.light);
+  if (options.muted) svg.classList.add('constellation--muted');
 
   const defs = svgEl('defs');
   const haze = svgEl('radialGradient', { id: `${uid}-haze` });

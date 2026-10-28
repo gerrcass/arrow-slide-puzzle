@@ -207,6 +207,32 @@ test.describe('play', () => {
     await expect(trigger).toBeFocused();
   });
 
+  test('dialog close controls are clickable and the settings focus trap wraps', async ({
+    page,
+  }) => {
+    await seedSave(page);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Settings' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Settings' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'Done' }).focus();
+    await page.keyboard.press('Tab');
+    await expect(dialog.locator('.dialog-close')).toBeFocused();
+    await dialog.locator('.dialog-close').click();
+    await expect(dialog).toBeHidden();
+  });
+
+  test('the welcome close control works and returns focus to the board', async ({ page }) => {
+    await seedSave(page, { introSeen: false, tutorialDone: false, tips: true });
+    await page.goto('/#/play/1');
+    const welcome = page.getByRole('dialog');
+    await expect(welcome).toBeVisible();
+    await welcome.locator('.dialog-close').click();
+    await expect(welcome).toBeHidden();
+    const focused = await page.evaluate(() => document.activeElement?.id);
+    expect(focused).toBe('tangle-board');
+  });
+
   test('settings persist sound, motion, assistive mode, and tips', async ({ page }) => {
     await seedSave(page);
     await page.goto('/');
@@ -381,9 +407,15 @@ test.describe('play', () => {
     await expect(first).toContainText('Round, small, patient');
 
     await page.goto('/#/levels');
-    await expect(page.locator('.level-card').first().locator('.level-card__constellation')).toHaveText(
+    const firstCard = page.locator('.level-card').first();
+    await expect(firstCard.locator('.level-card__constellation')).toHaveText(
       'Round, small, patient',
     );
+    await expect(firstCard.locator('.constellation-lines')).toBeHidden();
+    const locked = page.locator('.level-card').nth(1);
+    await expect(locked).toContainText('A hidden constellation');
+    await expect(locked).not.toContainText('The Kite');
+    await expect(locked.locator('.constellation--veiled')).toHaveCount(0);
   });
 });
 
@@ -428,6 +460,13 @@ test.describe('responsive', () => {
     await page.goto('/#/play/1');
     await expect(page.locator('.ribbon')).toHaveCount(FIRST.board.pieces.length);
     expect(await noHorizontalOverflow(page)).toBe(true);
+    const target = await page.evaluate(() => {
+      const svg = document.querySelector<SVGSVGElement>('.board-svg');
+      if (!svg) return 0;
+      const rect = svg.getBoundingClientRect();
+      return (rect.width / svg.viewBox.baseVal.width) * 1.02;
+    });
+    expect(target).toBeGreaterThanOrEqual(24);
     await shot(page, 'play-polished-390.png');
 
     await page.setViewportSize({ width: 320, height: 568 });
@@ -449,6 +488,13 @@ test.describe('responsive', () => {
       });
     });
     expect(clipped).toBe(false);
+    const target320 = await page.evaluate(() => {
+      const svg = document.querySelector<SVGSVGElement>('.board-svg');
+      if (!svg) return 0;
+      const rect = svg.getBoundingClientRect();
+      return (rect.width / svg.viewBox.baseVal.width) * 1.02;
+    });
+    expect(target320).toBeGreaterThanOrEqual(24);
     await shot(page, 'play-320.png');
 
     await page.goto('/#/levels');
@@ -491,6 +537,10 @@ test.describe('responsive', () => {
     const viewportHeight = await page.evaluate(() => window.innerHeight);
     expect(footerBottom).toBeLessThanOrEqual(viewportHeight + 1);
     await shot(page, 'play-320-guide.png');
+    const dismiss = page.getByRole('button', { name: 'Dismiss Nana Pearl’s tip' });
+    await expect(dismiss).toBeVisible();
+    await dismiss.click();
+    await expect(page.locator('.guide-moment')).toBeHidden();
   });
 
   test('390 px keeps the board still across a tutorial bubble', async ({ page }) => {
@@ -614,6 +664,43 @@ test.describe('responsive', () => {
     }
   });
 
+  test('landscape keeps Nana’s dismiss control reachable', async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await seedSave(page, { collisionTipSeen: false, tips: true });
+    await page.goto('/#/play/1');
+    await ribbon(page, blockedPieceId()).click();
+    await expect(page.locator('.guide-moment')).toBeVisible();
+    const dismiss = page.getByRole('button', { name: 'Dismiss Nana Pearl’s tip' });
+    await expect(dismiss).toBeVisible();
+    await dismiss.click();
+    await expect(page.locator('.guide-moment')).toBeHidden();
+  });
+
+  test('narrow landscape and 400% zoom keep a usable board', async ({ page }) => {
+    await seedSave(page);
+    for (const size of [
+      { width: 360, height: 225 },
+      { width: 320, height: 320 },
+    ]) {
+      await page.setViewportSize(size);
+      await page.goto('/#/play/1');
+      const board = await page.locator('.board-frame').boundingBox();
+      expect(board?.width ?? 0).toBeGreaterThanOrEqual(200);
+      expect(await noHorizontalOverflow(page), `${size.width}x${size.height}`).toBe(true);
+      await page.locator('.play-footer').scrollIntoViewIfNeeded();
+      await expect(page.locator('.play-footer')).toBeInViewport();
+    }
+
+    // A common phone landscape (667x375) is wide enough for the two-column
+    // layout; the footer must be visible without scrolling.
+    await page.setViewportSize({ width: 667, height: 375 });
+    await page.goto('/#/play/1');
+    const landscapeBoard = await page.locator('.board-frame').boundingBox();
+    expect(landscapeBoard?.width ?? 0).toBeGreaterThan(250);
+    await expect(page.locator('.play-footer')).toBeInViewport();
+    expect(await noHorizontalOverflow(page)).toBe(true);
+  });
+
   test('settings fit 320 px and the selected option has a visible tick', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await seedSave(page);
@@ -691,6 +778,36 @@ test.describe('offline shell', () => {
     await expect(page.getByRole('heading', { name: /Arrow Slide/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeVisible();
     await context.setOffline(false);
+  });
+});
+
+test.describe('offline new tab', () => {
+  test('loads the shell in a fresh tab with the network disabled', async ({
+    page,
+    context,
+  }) => {
+    await seedSave(page);
+    await page.goto('/');
+    await page.waitForFunction(
+      async () => {
+        if (!('serviceWorker' in navigator)) return false;
+        const registration = await navigator.serviceWorker.ready;
+        return registration.active !== null;
+      },
+      null,
+      { timeout: 20_000 },
+    );
+    await page.reload();
+    await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, {
+      timeout: 10_000,
+    });
+
+    const second = await context.newPage();
+    await context.setOffline(true);
+    await second.goto('/#/play/1');
+    await expect(second.getByRole('heading', { name: FIRST.title })).toBeVisible();
+    await context.setOffline(false);
+    await second.close();
   });
 });
 

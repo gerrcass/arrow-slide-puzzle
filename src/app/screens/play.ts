@@ -78,7 +78,6 @@ export function playScreen(context: AppContext, level: Level): Screen {
   );
   let disposed = false;
   let activeDialog: DialogHandle | null = null;
-  const timers = new Set<number>();
   let heartTimer: number | null = null;
 
   const screen = el('main', 'screen play-screen');
@@ -752,8 +751,6 @@ export function playScreen(context: AppContext, level: Level): Screen {
     destroy: () => {
       disposed = true;
       window.removeEventListener('keydown', onKeyDown);
-      for (const timer of timers) window.clearTimeout(timer);
-      timers.clear();
       if (heartTimer !== null) window.clearTimeout(heartTimer);
       activeDialog?.close();
       boardView.destroy();

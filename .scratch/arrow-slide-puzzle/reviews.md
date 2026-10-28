@@ -66,6 +66,39 @@ release-surface defects. All were fixed:
 Reviewer C found no P0 and recommended no-ship only for the result-dialog
 overflow, which is now covered by tests.
 
-### Reviewer D
+### Reviewer D — adversarial pass
 
-_Results appended after the round completes._
+Reviewer D played the campaign and attacked PWA, focus, zoom, and spoiler surfaces.
+It found no engine/content defect and confirmed the recent 375×667/390 fixes. It
+did find three release blockers and several smaller gaps. All were fixed:
+
+| Finding | Severity | Resolution |
+| --- | --- | --- |
+| Dialog close X was painted over by the eyebrow and unclickable | P1 | Close control gets `z-index`, eyebrow loses pointer events; E2E clicks the X on Settings and the welcome card, and checks focus returns to the board. |
+| Narrow landscape / 400% zoom collapsed the board to ~12 px | P1 | At ≤560×420 the play screen stacks, scrolls vertically, and enforces a 240 px board floor; E2E covers 360×225, 320×320, and 667×375. |
+| Level-select art still showed the full star pattern | P1 | Muted constellation art now hides line, star, and orbit groups; gallery locked cards use the same veil. E2E checks the silhouette only. |
+| Nana’s dismiss control vanished when the head hid | P2 | The dismiss button moved outside the head and is absolute-positioned; 320 and landscape E2E click it. |
+| Settings Tab escaped the dialog; welcome Escape/X ended on `<main>` | P2 | Explicit Tab loop; dialogs close before `onCancel` so the welcome can hand focus to the board. E2E covers both. |
+| Cold-tab offline asset requests missed because of `Vary: Origin` | P2 | Cache matches use `ignoreVary`; E2E opens a fresh tab offline. The cache name now includes a per-build timestamp, so old hashed assets are cleaned up. |
+| Level 12 title (“Nana’s Sky”) spoiled the final constellation | P2 | Renamed to “The Last Light”; the constellation name stays hidden until the reveal. |
+| Test/docs gaps: close buttons only viewport-checked, locked-card test targeted an unlocked card, axe target-size rule disabled, dead timer set | P2 | Close-click tests, locked-card assertions, manual 24 px target floor at 320/390, settings copy fixed, dead timer set removed. |
+
+Reviewer D also confirmed the engine, persistence boundary, zero-runtime
+dependency budget, manifest installability under `/arrow-slide-puzzle/`, and
+OFL font licensing. Its final recommendation was no-ship at the commit it
+reviewed; the fixes above were made immediately afterwards.
+
+## Outcome
+
+Both round-two reviewers' remaining P0/P1 findings were fixed before the PR:
+
+- Every dialog X is clickable and keyboard-reachable; the Tab loop wraps.
+- 375×667, 844×390, 568×320, 667×375, 320×320, and 360×225 are covered by browser tests.
+- The 320/390/landscape target-size claims match measured hit areas.
+- Level-select and gallery previews show only a silhouette until completion.
+- Nana's dismiss control stays visible at every supported size.
+- The service worker matches with `ignoreVary`, and a cold offline tab is tested.
+- Level 12 is titled “The Last Light”, so the final constellation name is not spoiled.
+
+Final verification on the branch: **127 unit tests, 40 Playwright tests, typecheck,
+production build, and Lighthouse mobile 100/100/100/100.**

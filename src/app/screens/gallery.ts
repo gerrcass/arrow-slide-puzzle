@@ -103,6 +103,7 @@ export function galleryScreen(context: AppContext): Screen {
           className: card.collected
             ? 'constellation--gallery'
             : 'constellation--gallery constellation--locked',
+          muted: !card.collected,
         }),
       );
     }
